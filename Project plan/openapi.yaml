@@ -1,0 +1,575 @@
+openapi: 3.0.3
+info:
+  title: Portal Management API
+  description: |-
+    API for managing portal assets (themes), pages, and menus. 
+    - `AssetContainers`: Manages theme properties, colors, and CSS with inheritance.
+    - `Pages`: Manages content pages for portals.
+    - `Menus`: Manages navigation menus and their items.
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+    description: Production Server
+paths:
+  /asset-containers:
+    get:
+      summary: List all Asset Containers
+      tags: [Asset Containers]
+      parameters:
+        - name: limit
+          in: query
+          description: The number of items to return.
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: The number of items to skip.
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: A list of asset containers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AssetContainer'
+    post:
+      summary: Create a new Asset Container
+      tags: [Asset Containers]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetContainer'
+      responses:
+        '201':
+          description: Asset container created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetContainer'
+        '400':
+          description: Invalid input.
+
+  /asset-containers/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: UUID of the asset container.
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get an Asset Container by ID
+      tags: [Asset Containers]
+      responses:
+        '200':
+          description: The requested asset container.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetContainer'
+        '404':
+          description: Asset container not found.
+    patch:
+      summary: Update an Asset Container
+      tags: [Asset Containers]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetContainerUpdate'
+      responses:
+        '200':
+          description: Asset container updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetContainer'
+        '404':
+          description: Asset container not found.
+    delete:
+      summary: Delete an Asset Container
+      tags: [Asset Containers]
+      responses:
+        '204':
+          description: Asset container deleted successfully.
+        '404':
+          description: Asset container not found.
+
+  /pages:
+    get:
+      summary: List all Pages
+      tags: [Pages]
+      parameters:
+        - name: portal_id
+          in: query
+          description: Filter pages by portal ID.
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          description: The number of items to return.
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: The number of items to skip.
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: A list of pages.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Page'
+    post:
+      summary: Create a new Page
+      tags: [Pages]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Page'
+      responses:
+        '201':
+          description: Page created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+
+  /pages/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: UUID of the page.
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get a Page by ID
+      tags: [Pages]
+      responses:
+        '200':
+          description: The requested page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '404':
+          description: Page not found.
+    patch:
+      summary: Update a Page
+      tags: [Pages]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PageUpdate'
+      responses:
+        '200':
+          description: Page updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '404':
+          description: Page not found.
+    delete:
+      summary: Delete a Page
+      tags: [Pages]
+      responses:
+        '204':
+          description: Page deleted successfully.
+        '404':
+          description: Page not found.
+
+  /menus:
+    get:
+      summary: List all Menus
+      tags: [Menus]
+      parameters:
+        - name: portal_id
+          in: query
+          description: Filter menus by portal ID.
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          description: The number of items to return.
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: The number of items to skip.
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: A list of menus.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Menu'
+    post:
+      summary: Create a new Menu
+      tags: [Menus]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Menu'
+      responses:
+        '201':
+          description: Menu created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+
+  /menus/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: UUID of the menu.
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get a Menu by ID
+      tags: [Menus]
+      responses:
+        '200':
+          description: The requested menu, with its items.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        '404':
+          description: Menu not found.
+    patch:
+      summary: Update a Menu
+      tags: [Menus]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuUpdate'
+      responses:
+        '200':
+          description: Menu updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        '404':
+          description: Menu not found.
+    delete:
+      summary: Delete a Menu
+      tags: [Menus]
+      responses:
+        '204':
+          description: Menu deleted successfully.
+        '404':
+          description: Menu not found.
+
+  /menus/{menuId}/items:
+    parameters:
+      - name: menuId
+        in: path
+        required: true
+        description: The ID of the menu to which the items belong.
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get all items for a Menu
+      tags: [Menu Items]
+      parameters:
+        - name: limit
+          in: query
+          description: The number of items to return.
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          description: The number of items to skip.
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: A list of menu items.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MenuItem'
+    post:
+      summary: Add an item to a Menu
+      tags: [Menu Items]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuItem'
+      responses:
+        '201':
+          description: Menu item created successfully.
+
+  /menus/{menuId}/items/{itemId}:
+    parameters:
+      - name: menuId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      summary: Get a specific Menu Item
+      tags: [Menu Items]
+      responses:
+        '200':
+          description: The requested menu item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItem'
+        '404':
+          description: Item not found.
+    patch:
+      summary: Update a Menu Item
+      tags: [Menu Items]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuItemUpdate'
+      responses:
+        '200':
+          description: Item updated successfully.
+        '404':
+          description: Item not found.
+    delete:
+      summary: Delete a Menu Item
+      tags: [Menu Items]
+      responses:
+        '204':
+          description: Item deleted successfully.
+        '404':
+          description: Item not found.
+
+components:
+  schemas:
+    AssetContainer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        logo_url:
+          type: string
+          format: uri
+          nullable: true
+        favicon_url:
+          type: string
+          format: uri
+          nullable: true
+        primary_font_url:
+          type: string
+          format: uri
+          nullable: true
+        css_overrides:
+          type: string
+          nullable: true
+        color_primary:
+          type: string
+          nullable: true
+        color_secondary:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    AssetContainerUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        logo_url:
+          type: string
+          format: uri
+          nullable: true
+        favicon_url:
+          type: string
+          format: uri
+          nullable: true
+        primary_font_url:
+          type: string
+          format: uri
+          nullable: true
+        css_overrides:
+          type: string
+          nullable: true
+        color_primary:
+          type: string
+          nullable: true
+        color_secondary:
+          type: string
+          nullable: true
+    Page:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        portal_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        slug:
+          type: string
+        content:
+          type: string
+          description: "Content in HTML or Markdown"
+        is_published:
+          type: boolean
+          default: false
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PageUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        content:
+          type: string
+        is_published:
+          type: boolean
+    Menu:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        portal_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MenuItem'
+    MenuUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+    MenuItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: "For creating nested sub-menus"
+        title:
+          type: string
+        link_url:
+          type: string
+          description: "Can be a relative path (/about) or a full URL"
+        order:
+          type: integer
+          default: 0
+    MenuItemUpdate:
+      type: object
+      properties:
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+        link_url:
+          type: string
+        order:
+          type: integer
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+tags:
+  - name: Asset Containers
+    description: "Manage themes and branding assets."
+  - name: Pages
+    description: "Manage content pages."
+  - name: Menus
+    description: "Manage navigation menus."
+  - name: Menu Items
+    description: "Manage the items within a menu."
