@@ -1,0 +1,38 @@
+{
+  "name": "cloud-project-backend",
+  "version": "0.1.0",
+  "description": "Backend for the Portal Management System (multi-tenant, Fastify + TypeScript)",
+  "main": "dist/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "start:dev": "tsx src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.1.0",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/jwt": "^10.0.0",
+    "@fastify/rate-limit": "^10.3.0",
+    "dotenv": "^17.2.3",
+    "fastify": "^5.6.1",
+    "ioredis": "^5.8.2",
+    "pino": "^10.1.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "eslint": "^9.39.1",
+    "pino-pretty": "^13.1.2",
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
