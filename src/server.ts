@@ -13,6 +13,8 @@ import portalRoutes from "@modules/portals/routes";
 import assetContainerRoutes from "@modules/asset-containers/routes";
 import pageRoutes from "@modules/pages/routes";
 import menuRoutes from "@modules/menus/routes";
+import authRoutes from "@modules/auth/routes";
+import authPlugin from "@plugins/auth";
 
 // Load environment variables from .env if present
 dotenv.config();
@@ -49,9 +51,11 @@ async function buildServer() {
   // Plugins
   await app.register(prismaPlugin);
   await app.register(redisPlugin);
+  await app.register(authPlugin);
 
   // Routes
   await app.register(async (instance) => {
+    await authRoutes(instance);
     await portalRoutes(instance);
     await assetContainerRoutes(instance);
     await pageRoutes(instance);

@@ -49,6 +49,7 @@ model User {
 
   portal        Portal         @relation(fields: [portalId], references: [id], onDelete: Cascade)
   refreshTokens RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
   pagesCreated  Page[]         @relation("PageCreator")
   pagesUpdated  Page[]         @relation("PageUpdater")
   storageFiles  StorageFile[]  @relation("FileUploader")
@@ -75,6 +76,19 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
   @@index([tokenHash])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique @db.VarChar(255)
+  expiresAt DateTime @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model AssetContainer {

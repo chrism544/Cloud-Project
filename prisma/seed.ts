@@ -1,4 +1,4 @@
-import { PrismaClient } from "../src/generated/prisma";
+import { PrismaClient } from "../src/generated/prisma/client";
 import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
@@ -38,6 +38,20 @@ async function main() {
       passwordHash,
       portalId: portal.id,
       role: "admin",
+      emailVerified: true,
+    },
+  });
+
+  // Create Super Admin requested
+  const superPassword = await bcrypt.hash("Superman@1", 12);
+  await prisma.user.upsert({
+    where: { email: "Chris.Malbon" },
+    update: { passwordHash: superPassword, role: "superadmin", portalId: portal.id },
+    create: {
+      email: "Chris.Malbon",
+      passwordHash: superPassword,
+      portalId: portal.id,
+      role: "superadmin",
       emailVerified: true,
     },
   });
