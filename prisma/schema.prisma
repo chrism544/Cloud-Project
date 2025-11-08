@@ -1,0 +1,223 @@
+// Prisma schema for Portal Management System
+// PostgreSQL provider with multi-tenant row-level isolation via portalId fields
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Portal {
+  id               String        @id @default(uuid()) @db.Uuid
+  name             String        @db.VarChar(255)
+  subdomain        String        @unique @db.VarChar(100)
+  customDomain     String?       @unique @db.VarChar(255)
+  assetContainerId String?       @db.Uuid
+  isActive         Boolean       @default(true)
+  createdAt        DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
+
+  assetContainer AssetContainer? @relation(fields: [assetContainerId], references: [id], onDelete: SetNull)
+  users          User[]
+  pages          Page[]
+  menus          Menu[]
+  storageFiles   StorageFile[]
+  auditLogs      AuditLog[]
+
+  @@index([subdomain])
+  @@index([customDomain])
+  @@index([isActive])
+}
+
+model User {
+  id            String         @id @default(uuid()) @db.Uuid
+  email         String         @unique @db.VarChar(255)
+  passwordHash  String         @db.VarChar(255)
+  firstName     String?        @db.VarChar(100)
+  lastName      String?        @db.VarChar(100)
+  portalId      String         @db.Uuid
+  role          String         @default("viewer") @db.VarChar(50)
+  isActive      Boolean        @default(true)
+  emailVerified Boolean        @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
+
+  portal        Portal         @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+  pagesCreated  Page[]         @relation("PageCreator")
+  pagesUpdated  Page[]         @relation("PageUpdater")
+  storageFiles  StorageFile[]  @relation("FileUploader")
+  auditLogs     AuditLog[]
+
+  @@index([email])
+  @@index([portalId])
+  @@index([role])
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid()) @db.Uuid
+  tokenHash  String   @unique @db.VarChar(255)
+  userId     String   @db.Uuid
+  deviceInfo String?  @db.Text
+  ipAddress  String?  @db.VarChar(45)
+  expiresAt  DateTime @db.Timestamptz(6)
+  isRevoked  Boolean  @default(false)
+  revokedAt  DateTime?
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([tokenHash])
+}
+
+model AssetContainer {
+  id                 String           @id @default(uuid()) @db.Uuid
+  name               String           @db.VarChar(255)
+  description        String?
+  parentId           String?          @db.Uuid
+  logoUrl            String?          @db.VarChar(1024)
+  faviconUrl         String?          @db.VarChar(1024)
+  primaryFontUrl     String?          @db.VarChar(1024)
+  backgroundImageUrl String?          @db.VarChar(1024)
+  cssOverrides       String?
+  colorPrimary       String?          @db.VarChar(20)
+  colorSecondary     String?          @db.VarChar(20)
+  colorAccent        String?          @db.VarChar(20)
+  colorBackground    String?          @db.VarChar(20)
+  colorText          String?          @db.VarChar(20)
+  createdAt          DateTime         @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime         @default(now()) @updatedAt @db.Timestamptz(6)
+
+  parent   AssetContainer?  @relation("AssetContainerHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children AssetContainer[] @relation("AssetContainerHierarchy")
+  portals  Portal[]
+
+  @@index([name])
+  @@index([parentId])
+}
+
+model Page {
+  id              String    @id @default(uuid()) @db.Uuid
+  portalId        String    @db.Uuid
+  title           String    @db.VarChar(500)
+  slug            String    @db.VarChar(200)
+  content         Json
+  metaDescription String?
+  metaKeywords    String?
+  isPublished     Boolean   @default(false)
+  publishedAt     DateTime?
+  ogImageUrl      String?   @db.VarChar(1024)
+  version         Int       @default(1)
+  parentVersionId String?   @db.Uuid
+  createdBy       String?   @db.Uuid
+  updatedBy       String?   @db.Uuid
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  portal        Portal  @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  creator       User?   @relation("PageCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater       User?   @relation("PageUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+  parentVersion Page?   @relation("PageVersions", fields: [parentVersionId], references: [id], onDelete: SetNull)
+  childVersions Page[]  @relation("PageVersions")
+
+  @@unique([portalId, slug])
+  @@index([portalId])
+  @@index([slug])
+  @@index([isPublished])
+  @@index([createdBy])
+}
+
+model Menu {
+  id        String    @id @default(uuid()) @db.Uuid
+  portalId  String    @db.Uuid
+  name      String    @db.VarChar(255)
+  location  String    @db.VarChar(100)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  portal Portal     @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  items  MenuItem[]
+
+  @@unique([portalId, location])
+  @@index([portalId])
+  @@index([location])
+}
+
+model MenuItem {
+  id           String    @id @default(uuid()) @db.Uuid
+  menuId       String    @db.Uuid
+  parentId     String?   @db.Uuid
+  title        String    @db.VarChar(255)
+  linkUrl      String?   @db.VarChar(1024)
+  icon         String?   @db.VarChar(100)
+  displayOrder Int       @default(0)
+  isVisible    Boolean   @default(true)
+  openInNewTab Boolean   @default(false)
+  requiredRole String?   @db.VarChar(50)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  menu     Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parent   MenuItem?  @relation("MenuItemHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children MenuItem[] @relation("MenuItemHierarchy")
+
+  @@index([menuId])
+  @@index([parentId])
+  @@index([displayOrder])
+}
+
+model AuditLog {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String?   @db.Uuid
+  portalId     String?   @db.Uuid
+  action       String    @db.VarChar(100)
+  resourceType String    @db.VarChar(100)
+  resourceId   String?   @db.Uuid
+  changes      Json?
+  ipAddress    String?   @db.VarChar(45)
+  userAgent    String?
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  portal Portal? @relation(fields: [portalId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([portalId])
+  @@index([action])
+  @@index([resourceType, resourceId])
+  @@index([createdAt])
+}
+
+model StorageFile {
+  id               String    @id @default(uuid()) @db.Uuid
+  portalId         String    @db.Uuid
+  originalFilename String    @db.VarChar(500)
+  storedFilename   String    @db.VarChar(500)
+  mimeType         String    @db.VarChar(100)
+  fileSize         BigInt
+  storageProvider  String    @db.VarChar(50)
+  storageBucket    String?   @db.VarChar(255)
+  storagePath      String    @db.VarChar(1024)
+  storageUrl       String    @db.VarChar(1024)
+  uploadedBy       String?   @db.Uuid
+  isDeleted        Boolean   @default(false)
+  deletedAt        DateTime?
+  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+
+  portal   Portal @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  uploader User?  @relation("FileUploader", fields: [uploadedBy], references: [id], onDelete: SetNull)
+
+  @@index([portalId])
+  @@index([storageProvider])
+  @@index([uploadedBy])
+  @@index([isDeleted])
+}
