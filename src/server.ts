@@ -4,6 +4,8 @@ import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUI from "@fastify/swagger-ui";
+import staticPlugin from "@fastify/static";
+import path from "path";
 import dotenv from "dotenv";
 import { logger } from "@utils/logger";
 import { registerErrorHandler } from "@utils/errors";
@@ -53,6 +55,11 @@ async function buildServer() {
   await app.register(redisPlugin);
   await app.register(authPlugin);
 
+  // Serve local uploads if configured
+  const uploadsPath = process.env.STORAGE_LOCAL_PATH || "uploads";
+  const uploadsUrl = process.env.STORAGE_LOCAL_URL || "/uploads";
+  await app.register(staticPlugin, { root: path.resolve(uploadsPath), prefix: "/uploads/" });
+
   // Routes
   await app.register(async (instance) => {
     await authRoutes(instance);
@@ -60,6 +67,8 @@ async function buildServer() {
     await assetContainerRoutes(instance);
     await pageRoutes(instance);
     await menuRoutes(instance);
+    const storageRoutes = await import("@modules/storage/routes").then(m => m.default);
+    await storageRoutes(instance);
   });
 
   // Health endpoint

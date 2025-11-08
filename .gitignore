@@ -41,6 +41,9 @@ coverage/
 
 # Prisma
 
+# Uploaded files (local storage)
+uploads/
+
 # Temporary files
 tmp/
 temp/
