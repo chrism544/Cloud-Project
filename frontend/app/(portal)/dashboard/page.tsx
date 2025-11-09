@@ -7,12 +7,14 @@ import { useAssetContainers } from "@/lib/hooks/useAssetContainers";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { FileText, Menu, Palette, Upload } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default function DashboardPage() {
   const portalId = useAuthStore((s) => s.portalId);
   const { data: portal } = usePortal(portalId || "");
-  const { data: pages } = usePages(portalId);
-  const { data: menus } = useMenus(portalId);
-  const { data: containers } = useAssetContainers(portalId);
+  const { data: pages } = usePages(portalId || undefined);
+  const { data: menus } = useMenus(portalId || undefined);
+  const { data: containers } = useAssetContainers(portalId || undefined);
 
   const stats = [
     { name: "Pages", value: pages?.length || 0, icon: FileText, href: "/dashboard/pages" },

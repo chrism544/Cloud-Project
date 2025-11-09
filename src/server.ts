@@ -78,7 +78,7 @@ async function buildServer() {
     await assetContainerRoutes(instance);
     await pageRoutes(instance);
     await menuRoutes(instance);
-    await healthRoutes(instance);
+    await healthRoutes(instance, {});
     const storageRoutes = await import("@modules/storage/routes").then(m => m.default);
     await storageRoutes(instance);
   });

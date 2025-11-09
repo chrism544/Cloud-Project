@@ -16,39 +16,45 @@ export interface PerformanceMetrics {
 /**
  * Performance monitoring middleware
  * Tracks request duration and logs slow requests
+ *
+ * Usage: Add as a Fastify plugin
+ * await app.register(performanceMonitoringPlugin)
  */
-export function performanceMonitoringHook(threshold: number = 1000) {
-  return async function (request: FastifyRequest, reply: FastifyReply) {
-    const startTime = Date.now();
+export async function performanceMonitoringPlugin(fastify: any, options: { threshold?: number } = {}) {
+  const threshold = options.threshold || 1000;
 
-    reply.addHook('onSend', async (request, reply, payload) => {
-      const duration = Date.now() - startTime;
+  fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
+    (request as any).startTime = Date.now();
+  });
 
-      // Add performance header
-      reply.header('X-Response-Time', `${duration}ms`);
+  fastify.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
+    const startTime = (request as any).startTime;
+    if (!startTime) return;
 
-      // Log slow requests
-      if (duration > threshold) {
-        request.log.warn({
-          url: request.url,
-          method: request.method,
-          duration,
-          statusCode: reply.statusCode,
-        }, 'Slow request detected');
-      }
+    const duration = Date.now() - startTime;
 
-      // Log metrics
-      request.log.info({
+    // Add performance header
+    reply.header('X-Response-Time', `${duration}ms`);
+
+    // Log slow requests
+    if (duration > threshold) {
+      request.log.warn({
         url: request.url,
         method: request.method,
         duration,
         statusCode: reply.statusCode,
-        memoryUsage: process.memoryUsage(),
-      }, 'Request completed');
+      }, 'Slow request detected');
+    }
 
-      return payload;
-    });
-  };
+    // Log metrics
+    request.log.info({
+      url: request.url,
+      method: request.method,
+      duration,
+      statusCode: reply.statusCode,
+      memoryUsage: process.memoryUsage(),
+    }, 'Request completed');
+  });
 }
 
 /**

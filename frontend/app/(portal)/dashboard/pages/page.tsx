@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = 'force-dynamic';
 import { useState } from "react";
 import { useAuthStore } from "@/lib/stores/auth";
 import { usePages, useCreatePage, useUpdatePage, useDeletePage } from "@/lib/hooks/usePages";
