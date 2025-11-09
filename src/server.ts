@@ -80,6 +80,8 @@ async function buildServer() {
     await pageRoutes(instance);
     await menuRoutes(instance);
     await adminRoutes(instance);
+    const analyticsRoutes = await import("@modules/analytics/routes").then(m => m.default);
+    await analyticsRoutes(instance);
     await healthRoutes(instance, {});
     const storageRoutes = await import("@modules/storage/routes").then(m => m.default);
     await storageRoutes(instance);
