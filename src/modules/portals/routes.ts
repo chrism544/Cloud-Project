@@ -43,4 +43,15 @@ export default async function portalRoutes(app: FastifyInstance) {
     await app.prisma.portal.delete({ where: { id } });
     reply.code(204).send();
   });
+
+  // Get all menus for a specific portal
+  app.get(`${prefix}/:portalId/menus`, async (req, reply) => {
+    const { portalId } = req.params as { portalId: string };
+    const menus = await app.prisma.menu.findMany({
+      where: { portalId },
+      orderBy: { createdAt: "desc" },
+      include: { items: { orderBy: { displayOrder: "asc" } } },
+    });
+    reply.send(menus);
+  });
 }

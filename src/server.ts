@@ -16,6 +16,7 @@ import assetContainerRoutes from "@modules/asset-containers/routes";
 import pageRoutes from "@modules/pages/routes";
 import menuRoutes from "@modules/menus/routes";
 import authRoutes from "@modules/auth/routes";
+import adminRoutes from "@modules/admin/routes";
 import authPlugin from "@plugins/auth";
 import healthRoutes from "@modules/health/routes";
 
@@ -78,6 +79,7 @@ async function buildServer() {
     await assetContainerRoutes(instance);
     await pageRoutes(instance);
     await menuRoutes(instance);
+    await adminRoutes(instance);
     await healthRoutes(instance, {});
     const storageRoutes = await import("@modules/storage/routes").then(m => m.default);
     await storageRoutes(instance);
@@ -85,6 +87,10 @@ async function buildServer() {
 
   // Global error handler
   registerErrorHandler(app);
+
+  app.get("/", async (req, reply) => {
+    return { message: "Welcome to the Portal Management API" };
+  });
 
   return app;
 }
