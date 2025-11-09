@@ -194,15 +194,80 @@ app.get('/admin-only', { preHandler: app.requireRole('admin') }, async (req, rep
 - ✅ All TypeScript compilation errors resolved
 - ✅ Build passes successfully
 
+## Storage (Phase 5)
+
+The storage system uses an abstraction layer supporting multiple providers:
+
+**Providers:**
+- **Local** - Filesystem storage for development (`STORAGE_PROVIDER=local`)
+- **S3-Compatible** - Works with DigitalOcean Spaces, Linode Object Storage, Vultr, MinIO
+
+**API Endpoints:**
+- `POST /api/v1/storage/upload` - Direct multipart file upload
+- `POST /api/v1/storage/presigned-url` - Generate presigned URL (S3 providers only)
+- `DELETE /api/v1/storage?path=...` - Delete file by path
+
+**Configuration:** Set `STORAGE_PROVIDER` in `.env` and configure provider-specific variables (endpoint, bucket, access keys, etc.)
+
 ## Known Issues / TODOs
 
-- [ ] Phase 6-13 not yet started (frontend, testing, observability, CI/CD, etc.)
+- [ ] Phase 7-13 not yet started (frontend UI, testing, observability, CI/CD, etc.)
 - [ ] Email notifications service placeholder (Phase 13) - password reset emails not sent
 - [ ] Audit logging not implemented (table exists, service not wired)
 - [ ] Cache invalidation not automated
 - [ ] No test suite yet (Phase 8)
-- [ ] Frontend not yet scaffolded (Phase 6)
+- [ ] Puck editor integration not yet added to frontend (Phase 7)
 - [ ] Redis and PostgreSQL need to be running for full functionality
+
+## Frontend Structure (Phase 6)
+
+**Location:** `frontend/` directory
+
+**Tech Stack:**
+- Next.js 16 (App Router)
+- React 19
+- Tailwind CSS 4
+- TypeScript
+- TanStack Query (React Query)
+- Zustand (state management)
+- Axios (HTTP client)
+- dnd-kit (drag and drop)
+- Headless UI (accessible components)
+- Lucide React (icons)
+
+**Directory Structure:**
+```
+frontend/
+├── app/
+│   ├── (auth)/          # Auth route group
+│   │   ├── login/       # Login page
+│   │   └── register/    # Registration page (placeholder)
+│   ├── (portal)/        # Portal route group
+│   │   ├── pages/       # Page management
+│   │   ├── menus/       # Menu management
+│   │   └── themes/      # Theme management
+│   ├── layout.tsx       # Root layout
+│   └── page.tsx         # Home page
+├── components/
+│   ├── ui/              # Reusable UI components
+│   ├── editors/         # Puck & menu editors
+│   └── layouts/         # Layout components
+├── lib/
+│   ├── api.ts           # Axios instance with auth interceptors
+│   ├── hooks/           # Custom React hooks
+│   └── stores/          # Zustand stores (auth, etc.)
+└── types/               # TypeScript type definitions
+```
+
+**Development:**
+```bash
+cd frontend
+npm run dev              # Start Next.js dev server (port 3000)
+npm run build            # Build for production
+npm run lint             # Run ESLint
+```
+
+**Note:** Frontend and backend both default to port 3000. Run them on different ports or configure `next.config.ts` to use port 3001 for frontend.
 
 ## Phase Progress
 
@@ -213,6 +278,7 @@ According to `Project Plan - Updated.md`:
 - ✅ Phase 3: Core API Implementation (CRUD)
 - ✅ Phase 4: Authentication & Security Enhancements
 - ✅ Phase 5: Asset Management with VPS Provider Abstraction
-- ⏳ Phase 6+: Frontend, Testing, Observability, CI/CD, etc.
+- ✅ Phase 6: Frontend Foundation & Setup
+- ⏳ Phase 7+: Frontend UI, Testing, Observability, CI/CD, etc.
 
-**Next Steps:** Begin Phase 6 (Frontend Foundation) or implement missing Phase 4/5 features.
+**Next Steps:** Begin Phase 7 (Frontend UI & API Integration) or Phase 8 (Testing).
