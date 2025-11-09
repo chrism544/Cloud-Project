@@ -21,12 +21,19 @@ model Portal {
   createdAt        DateTime      @default(now()) @db.Timestamptz(6)
   updatedAt        DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
 
-  assetContainer AssetContainer? @relation(fields: [assetContainerId], references: [id], onDelete: SetNull)
-  users          User[]
-  pages          Page[]
-  menus          Menu[]
-  storageFiles   StorageFile[]
-  auditLogs      AuditLog[]
+  assetContainer   AssetContainer?  @relation(fields: [assetContainerId], references: [id], onDelete: SetNull)
+  users            User[]
+  pages            Page[]
+  menus            Menu[]
+  storageFiles     StorageFile[]
+  auditLogs        AuditLog[]
+  // Admin extensions relations
+  userOnPortals    UserOnPortal[]  @relation("UserOnPortalPortal")
+  themes           Theme[]         @relation("ThemePortal")
+  globalContents   GlobalContent[] @relation("GlobalContentPortal")
+  pageAnalytics    PageAnalytics[] @relation("PageAnalyticsPortal")
+  userActivities   UserActivity[]  @relation("UserActivityPortal")
+  securityAlerts   SecurityAlert[] @relation("SecurityAlertPortal")
 
   @@index([subdomain])
   @@index([customDomain])
@@ -47,13 +54,18 @@ model User {
   createdAt     DateTime       @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime       @default(now()) @updatedAt @db.Timestamptz(6)
 
-  portal        Portal         @relation(fields: [portalId], references: [id], onDelete: Cascade)
-  refreshTokens RefreshToken[]
-  passwordResetTokens PasswordResetToken[]
-  pagesCreated  Page[]         @relation("PageCreator")
-  pagesUpdated  Page[]         @relation("PageUpdater")
-  storageFiles  StorageFile[]  @relation("FileUploader")
-  auditLogs     AuditLog[]
+  portal               Portal            @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  refreshTokens        RefreshToken[]
+  passwordResetTokens  PasswordResetToken[]
+  pagesCreated         Page[]            @relation("PageCreator")
+  pagesUpdated         Page[]            @relation("PageUpdater")
+  storageFiles         StorageFile[]     @relation("FileUploader")
+  auditLogs            AuditLog[]
+  // Admin extensions relations
+  userOnPortals        UserOnPortal[]    @relation("UserOnPortalUser")
+  activities           UserActivity[]    @relation("UserActivityUser")
+  resolvedSecurityAlerts SecurityAlert[] @relation("SecurityAlertResolver")
+  updatedSystemConfigs SystemConfig[]    @relation("SystemConfigUpdater")
 
   @@index([email])
   @@index([portalId])
@@ -135,11 +147,13 @@ model Page {
   createdAt       DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt       DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
 
-  portal        Portal  @relation(fields: [portalId], references: [id], onDelete: Cascade)
-  creator       User?   @relation("PageCreator", fields: [createdBy], references: [id], onDelete: SetNull)
-  updater       User?   @relation("PageUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
-  parentVersion Page?   @relation("PageVersions", fields: [parentVersionId], references: [id], onDelete: SetNull)
-  childVersions Page[]  @relation("PageVersions")
+  portal        Portal           @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  creator       User?            @relation("PageCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater       User?            @relation("PageUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+  parentVersion Page?            @relation("PageVersions", fields: [parentVersionId], references: [id], onDelete: SetNull)
+  childVersions Page[]           @relation("PageVersions")
+  // Admin extensions relations
+  analytics     PageAnalytics[]  @relation("PageAnalyticsPage")
 
   @@unique([portalId, slug])
   @@index([portalId])
@@ -234,4 +248,141 @@ model StorageFile {
   @@index([storageProvider])
   @@index([uploadedBy])
   @@index([isDeleted])
+}
+
+// --- Admin Portal Extensions ---
+
+enum UserRole {
+  SUPER_ADMIN
+  PORTAL_ADMIN
+  EDITOR
+  VIEWER
+}
+
+model UserOnPortal {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  portalId     String    @db.Uuid
+  assignedRole UserRole  @default(VIEWER)
+  permissions  Json?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(6)
+
+  user   User   @relation("UserOnPortalUser", fields: [userId], references: [id], onDelete: Cascade)
+  portal Portal @relation("UserOnPortalPortal", fields: [portalId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, portalId])
+  @@index([userId])
+  @@index([portalId])
+}
+
+model Theme {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @db.VarChar(255)
+  portalId  String    @db.Uuid
+  isActive  Boolean   @default(false)
+  tokens    Json
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+
+  portal    Portal    @relation("ThemePortal", fields: [portalId], references: [id], onDelete: Cascade)
+
+  @@unique([portalId, isActive])
+  @@index([portalId])
+}
+
+model GlobalContent {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String    @db.VarChar(255)
+  key       String    @db.VarChar(100)
+  content   Json
+  portalId  String    @db.Uuid
+  category  String?   @db.VarChar(100)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+
+  portal    Portal    @relation("GlobalContentPortal", fields: [portalId], references: [id], onDelete: Cascade)
+
+  @@unique([portalId, key])
+  @@index([portalId])
+  @@index([category])
+}
+
+model PageAnalytics {
+  id            String    @id @default(uuid()) @db.Uuid
+  pageId        String    @db.Uuid
+  portalId      String    @db.Uuid
+  views         Int       @default(0)
+  uniqueViews   Int       @default(0)
+  avgTimeOnPage Float?
+  bounceRate    Float?
+  date          DateTime  @default(now()) @db.Timestamptz(6)
+
+  page   Page   @relation("PageAnalyticsPage", fields: [pageId], references: [id], onDelete: Cascade)
+  portal Portal @relation("PageAnalyticsPortal", fields: [portalId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, date])
+  @@index([portalId])
+  @@index([date])
+}
+
+model UserActivity {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  portalId     String    @db.Uuid
+  action       String    @db.VarChar(100)
+  resourceType String    @db.VarChar(100)
+  resourceId   String?   @db.Uuid
+  metadata     Json?
+  timestamp    DateTime  @default(now()) @db.Timestamptz(6)
+
+  user   User   @relation("UserActivityUser", fields: [userId], references: [id], onDelete: Cascade)
+  portal Portal @relation("UserActivityPortal", fields: [portalId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([portalId])
+  @@index([action])
+  @@index([timestamp])
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model SecurityAlert {
+  id          String        @id @default(uuid()) @db.Uuid
+  portalId    String        @db.Uuid
+  type        String        @db.VarChar(100)
+  severity    AlertSeverity
+  description String        @db.Text
+  metadata    Json?
+  resolved    Boolean       @default(false)
+  resolvedBy  String?       @db.Uuid
+  resolvedAt  DateTime?
+  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
+
+  portal   Portal @relation("SecurityAlertPortal", fields: [portalId], references: [id], onDelete: Cascade)
+  resolver User?  @relation("SecurityAlertResolver", fields: [resolvedBy], references: [id], onDelete: SetNull)
+
+  @@index([portalId])
+  @@index([severity])
+  @@index([resolved])
+}
+
+model SystemConfig {
+  id        String    @id @default(uuid()) @db.Uuid
+  key       String    @unique @db.VarChar(100)
+  value     Json
+  category  String    @db.VarChar(50)
+  updatedBy String?   @db.Uuid
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+
+  updater   User?     @relation("SystemConfigUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@index([category])
 }
