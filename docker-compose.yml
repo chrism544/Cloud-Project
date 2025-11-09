@@ -64,7 +64,7 @@ services:
     ports:
       - "3001:3000"
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       DATABASE_URL: postgresql://portal_user:portal_password@postgres:5432/portals_db
       REDIS_URL: redis://redis:6379
       JWT_SECRET: dev-jwt-secret-change-in-production
@@ -74,30 +74,21 @@ services:
       STORAGE_LOCAL_PATH: /app/uploads
     volumes:
       - ./uploads:/app/uploads
-      - ./src:/app/src
-      - ./prisma:/app/prisma
-    command: sh -c "npx prisma migrate deploy && npm run dev"
+    command: sh -c "npx prisma migrate deploy && node dist/server.js"
 
   # Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      target: builder
     container_name: portal-frontend
     depends_on:
       - backend
     ports:
       - "3000:3000"
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       NEXT_PUBLIC_API_URL: http://localhost:3001
-    volumes:
-      - ./frontend/app:/app/app
-      - ./frontend/components:/app/components
-      - ./frontend/lib:/app/lib
-      - ./frontend/public:/app/public
-    command: npm run dev
 
 volumes:
   postgres_data:
