@@ -17,6 +17,7 @@ import pageRoutes from "@modules/pages/routes";
 import menuRoutes from "@modules/menus/routes";
 import authRoutes from "@modules/auth/routes";
 import authPlugin from "@plugins/auth";
+import healthRoutes from "@modules/health/routes";
 
 // Load environment variables from .env if present
 dotenv.config();
@@ -77,13 +78,9 @@ async function buildServer() {
     await assetContainerRoutes(instance);
     await pageRoutes(instance);
     await menuRoutes(instance);
+    await healthRoutes(instance);
     const storageRoutes = await import("@modules/storage/routes").then(m => m.default);
     await storageRoutes(instance);
-  });
-
-  // Health endpoint
-  app.get("/health", async () => {
-    return { status: "ok" };
   });
 
   // Global error handler

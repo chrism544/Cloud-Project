@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nPhase 4 Complete: Enhanced security and bug fixes\n\n- Added stricter rate limiting to auth endpoints (5 req/15min per Phase 4 requirements)\n- Fixed plugin decorators to use fastify-plugin wrapper for proper encapsulation\n- Fixed JWT type declarations to extend @fastify/jwt instead of conflicting\n- Fixed S3-compatible storage provider TypeScript errors\n- Fixed logger configuration in server.ts\n- Added @types/bcrypt for proper type checking\n- Created comprehensive CLAUDE.md documentation for future Claude Code instances\n- All TypeScript compilation errors resolved, build passes successfully\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit -m \"$(cat <<''EOF''\nPhase 6 Complete: Frontend foundation and project structure\n\n- Initialized Next.js 16 with App Router and React 19\n- Installed all required dependencies (TanStack Query, Zustand, dnd-kit, Headless UI, Lucide React)\n- Established complete directory structure per Phase 6 requirements:\n  - app/(auth)/ route group for authentication pages\n  - app/(portal)/ route group for portal management pages\n  - components/ with ui/, editors/, and layouts/ subdirectories\n  - lib/ with api/, hooks/, and stores/ subdirectories\n  - types/ for TypeScript definitions\n- Created tailwind.config.ts for Tailwind CSS 4 configuration\n- Set up Axios client with JWT authentication interceptors (lib/api.ts)\n- Created Zustand auth store with token management (lib/stores/auth.ts)\n- Built login page with portal selection and authentication flow\n- Added README files documenting each empty directory''s purpose\n- Updated CLAUDE.md with Phase 5 (Storage) and Phase 6 (Frontend) documentation\n- Verified frontend dev server starts successfully\n\nPhase 5 was already complete (VPS storage abstraction per commit be5b1dc)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
