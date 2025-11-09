@@ -90,8 +90,139 @@ async function buildServer() {
   // Global error handler
   registerErrorHandler(app);
 
+  // Root route - API status page
   app.get("/", async (req, reply) => {
-    return { message: "Welcome to the Portal Management API" };
+    reply.type("text/html");
+    return `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Portal Management API - Online</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+          }
+          .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 48px;
+            max-width: 600px;
+            width: 100%;
+          }
+          .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
+          }
+          .status-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+          }
+          h1 {
+            font-size: 32px;
+            color: #1f2937;
+            margin-bottom: 12px;
+          }
+          p {
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 32px;
+          }
+          .links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          }
+          .link-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #1f2937;
+            transition: all 0.2s;
+          }
+          .link-item:hover {
+            background: #f3f4f6;
+            transform: translateX(4px);
+          }
+          .link-label {
+            font-weight: 500;
+          }
+          .link-url {
+            color: #6366f1;
+            font-size: 14px;
+          }
+          .footer {
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 14px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="status-badge">
+            <span class="status-dot"></span>
+            <span>API ONLINE</span>
+          </div>
+
+          <h1>Portal Management API</h1>
+          <p>The API is running and ready to handle requests. Access the resources below to interact with the system.</p>
+
+          <div class="links">
+            <a href="/api/v1/health" class="link-item">
+              <span class="link-label">Health Check</span>
+              <span class="link-url">/api/v1/health</span>
+            </a>
+
+            <a href="/api/v1/health/detailed" class="link-item">
+              <span class="link-label">Detailed System Status</span>
+              <span class="link-url">/api/v1/health/detailed</span>
+            </a>
+
+            <a href="/docs" class="link-item">
+              <span class="link-label">API Documentation</span>
+              <span class="link-url">/docs</span>
+            </a>
+          </div>
+
+          <div class="footer">
+            Portal Management System &bull; ${new Date().getFullYear()}
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
   });
 
   return app;

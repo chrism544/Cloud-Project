@@ -35,7 +35,7 @@ export default function LoginPage() {
       if (remember) {
         // already persisted to localStorage via store
       }
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     } catch (err: any) {
       setError(err?.response?.data?.error?.message || "Login failed");
     }

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001",
 });
 
 // Token management via localStorage
@@ -26,7 +26,7 @@ api.interceptors.response.use(
       original._retry = true;
       const { refreshToken } = getTokens();
       if (!refreshToken) throw error;
-      const resp = await axios.post((process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000") + "/api/v1/auth/refresh", { refreshToken });
+      const resp = await axios.post((process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001") + "/api/v1/auth/refresh", { refreshToken });
       localStorage.setItem("accessToken", resp.data.accessToken);
       localStorage.setItem("refreshToken", resp.data.refreshToken);
       original.headers.Authorization = `Bearer ${resp.data.accessToken}`;

@@ -144,6 +144,18 @@ model Page {
   parentVersionId String?   @db.Uuid
   createdBy       String?   @db.Uuid
   updatedBy       String?   @db.Uuid
+  // SEO fields
+  seoTitle        String?   @db.VarChar(500)
+  canonicalUrl    String?   @db.VarChar(1024)
+  noIndex         Boolean   @default(false)
+  noFollow        Boolean   @default(false)
+  structuredData  Json?
+  // Custom CSS/JS
+  customCss       String?   @db.Text
+  customJs        String?   @db.Text
+  // i18n
+  locale          String?   @db.VarChar(10)
+  translationOf   String?   @db.Uuid
   createdAt       DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt       DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
 
@@ -160,6 +172,7 @@ model Page {
   @@index([slug])
   @@index([isPublished])
   @@index([createdBy])
+  @@index([locale])
 }
 
 model Menu {
@@ -385,4 +398,27 @@ model SystemConfig {
   updater   User?     @relation("SystemConfigUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
 
   @@index([category])
+}
+
+model GlobalSettings {
+  id                String    @id @default(uuid()) @db.Uuid
+  portalId          String    @unique @db.Uuid
+  siteName          String?   @db.VarChar(255)
+  siteDescription   String?   @db.Text
+  faviconUrl        String?   @db.VarChar(1024)
+  logoUrl           String?   @db.VarChar(1024)
+  defaultLocale     String    @default("en") @db.VarChar(10)
+  timezone          String    @default("UTC") @db.VarChar(50)
+  analyticsCode     String?   @db.Text
+  googleTagManager  String?   @db.VarChar(50)
+  customHeadCode    String?   @db.Text
+  customFooterCode  String?   @db.Text
+  maintenanceMode   Boolean   @default(false)
+  maintenanceMessage String?  @db.Text
+  socialLinks       Json?
+  contactInfo       Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([portalId])
 }

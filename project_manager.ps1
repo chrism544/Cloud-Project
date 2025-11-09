@@ -13,9 +13,9 @@ $script:DOCKER_HUB_REPO_FRONTEND = "portal-frontend"
 
 # VPS configurations
 $script:VPS_CONFIGS = @{
-    "production" = "user@production.example.com"
-    "staging" = "user@staging.example.com"
-    "development" = "user@dev.example.com"
+    "production" = "ubuntu@37.59.115.194"
+    "staging" = "ubuntu@37.59.115.194"
+    "development" = "ubuntu@37.59.115.194"
 }
 
 # Helper Functions
@@ -239,7 +239,9 @@ function Invoke-GitCommitAndPush {
     $addAll = Read-Host "Do you want to add all changes? (y/n)"
 
     if ($addAll -eq "y") {
-        git add .
+        # Add all except nul file
+        git add --all
+        git reset HEAD nul 2>$null
     } else {
         $files = Read-Host "Enter files to add (space-separated)"
         git add $files.Split(' ')
@@ -293,7 +295,7 @@ function Connect-DockerHub {
 }
 
 function Push-ToDockerHub {
-    Write-Host "`n=== Push to Docker Hub ===" -ForegroundColor Cyan
+    Write-Host "`n=== Build and Push to Docker Hub ===" -ForegroundColor Cyan
 
     if (-not $script:DOCKER_HUB_USERNAME) {
         Write-ErrorMsg "Docker Hub not configured. Please configure first."
@@ -304,20 +306,197 @@ function Push-ToDockerHub {
     $version = Read-Host "Enter version tag (default: latest)"
     if (-not $version) { $version = "latest" }
 
-    # Tag and push backend
-    Write-InfoMsg "Tagging and pushing backend image..."
-    docker tag portal-backend:latest "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_BACKEND):$version"
-    docker push "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_BACKEND):$version"
+    # Build images
+    Write-InfoMsg "Building Docker images..."
+    docker build -t "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_BACKEND):$version" .
+    docker build -t "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_FRONTEND):$version" ./frontend
 
-    # Tag and push frontend
-    Write-InfoMsg "Tagging and pushing frontend image..."
-    docker tag portal-frontend:latest "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_FRONTEND):$version"
+    # Tag as latest
+    docker tag "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_BACKEND):$version" "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_BACKEND):latest"
+    docker tag "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_FRONTEND):$version" "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_FRONTEND):latest"
+
+    # Push both versions
+    Write-InfoMsg "Pushing images to Docker Hub..."
+    docker push "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_BACKEND):$version"
+    docker push "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_BACKEND):latest"
     docker push "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_FRONTEND):$version"
+    docker push "$script:DOCKER_HUB_USERNAME/$($script:DOCKER_HUB_REPO_FRONTEND):latest"
 
     if ($LASTEXITCODE -eq 0) {
-        Write-SuccessMsg "Images pushed to Docker Hub"
+        Write-SuccessMsg "Images built and pushed to Docker Hub"
     } else {
-        Write-ErrorMsg "Push failed"
+        Write-ErrorMsg "Build/Push failed"
+    }
+}
+
+# VPS Deployment Functions
+function Deploy-ToVPS {
+    Write-Host "`n=== Deploy to VPS ===" -ForegroundColor Cyan
+    
+    Write-Host "Available VPS targets:"
+    $i = 1
+    $vpsArray = @()
+    $script:VPS_CONFIGS.Keys | ForEach-Object {
+        Write-Host "  $i. $_ (ubuntu@37.59.115.194)" -ForegroundColor Yellow
+        $vpsArray += $_
+        $i++
+    }
+    
+    $choice = Read-Host "`nSelect VPS target (1-$($vpsArray.Count))"
+    
+    if ($choice -match '^\d+$' -and [int]$choice -ge 1 -and [int]$choice -le $vpsArray.Count) {
+        $vpsName = $vpsArray[[int]$choice - 1]
+    } else {
+        Write-ErrorMsg "Invalid selection"
+        return
+    }
+    
+    $sshTarget = $script:VPS_CONFIGS[$vpsName]
+    Write-InfoMsg "Deploying to $sshTarget..."
+    
+    if (-not $script:DOCKER_HUB_USERNAME) {
+        Write-ErrorMsg "Docker Hub not configured. Please configure first."
+        Set-DockerHubConfig
+        return
+    }
+    
+    # Setup docker permissions
+    Write-InfoMsg "Setting up docker permissions..."
+    ssh $sshTarget 'sudo usermod -aG docker ubuntu'
+    
+    # Copy docker-compose and .env
+    Write-InfoMsg "Copying configuration files..."
+    ssh $sshTarget 'mkdir -p /home/ubuntu/app'
+    scp docker-compose.yml "$sshTarget`:/home/ubuntu/app/"
+    scp .env "$sshTarget`:/home/ubuntu/app/"
+    
+    # Deploy on VPS - pull latest images from Docker Hub
+    Write-InfoMsg "Pulling latest images and deploying..."
+    ssh $sshTarget "cd /home/ubuntu/app && sg docker -c 'docker compose down && docker compose pull && docker image prune -f && docker compose up -d && docker compose ps'"
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-SuccessMsg "Deployment completed"
+    } else {
+        Write-ErrorMsg "Deployment failed"
+    }
+}
+
+function Connect-VPS {
+    Write-Host "`n=== Connect to VPS ===" -ForegroundColor Cyan
+    
+    Write-Host "Available VPS targets:"
+    $i = 1
+    $vpsArray = @()
+    $script:VPS_CONFIGS.Keys | ForEach-Object {
+        Write-Host "  $i. $_ (ubuntu@37.59.115.194)" -ForegroundColor Yellow
+        $vpsArray += $_
+        $i++
+    }
+    
+    $choice = Read-Host "`nSelect VPS target (1-$($vpsArray.Count))"
+    
+    if ($choice -match '^\d+$' -and [int]$choice -ge 1 -and [int]$choice -le $vpsArray.Count) {
+        $vpsName = $vpsArray[[int]$choice - 1]
+    } else {
+        Write-ErrorMsg "Invalid selection"
+        return
+    }
+    
+    $sshTarget = $script:VPS_CONFIGS[$vpsName]
+    Write-InfoMsg "Connecting to $sshTarget..."
+    ssh $sshTarget
+}
+
+function Show-VPSStatus {
+    Write-Host "`n=== VPS Status ===" -ForegroundColor Cyan
+    
+    Write-Host "Available VPS targets:"
+    $i = 1
+    $vpsArray = @()
+    $script:VPS_CONFIGS.Keys | ForEach-Object {
+        Write-Host "  $i. $_ (ubuntu@37.59.115.194)" -ForegroundColor Yellow
+        $vpsArray += $_
+        $i++
+    }
+    
+    $choice = Read-Host "`nSelect VPS target (1-$($vpsArray.Count))"
+    
+    if ($choice -match '^\d+$' -and [int]$choice -ge 1 -and [int]$choice -le $vpsArray.Count) {
+        $vpsName = $vpsArray[[int]$choice - 1]
+    } else {
+        Write-ErrorMsg "Invalid selection"
+        return
+    }
+    
+    $sshTarget = $script:VPS_CONFIGS[$vpsName]
+    Write-InfoMsg "Checking status on $sshTarget..."
+    
+    ssh $sshTarget 'docker compose ps && docker stats --no-stream && df -h && free -h'
+}
+
+function Show-VPSLogs {
+    Write-Host "`n=== VPS Logs ===" -ForegroundColor Cyan
+    
+    Write-Host "Available VPS targets:"
+    $i = 1
+    $vpsArray = @()
+    $script:VPS_CONFIGS.Keys | ForEach-Object {
+        Write-Host "  $i. $_ (ubuntu@37.59.115.194)" -ForegroundColor Yellow
+        $vpsArray += $_
+        $i++
+    }
+    
+    $choice = Read-Host "`nSelect VPS target (1-$($vpsArray.Count))"
+    
+    if ($choice -match '^\d+$' -and [int]$choice -ge 1 -and [int]$choice -le $vpsArray.Count) {
+        $vpsName = $vpsArray[[int]$choice - 1]
+    } else {
+        Write-ErrorMsg "Invalid selection"
+        return
+    }
+    
+    $sshTarget = $script:VPS_CONFIGS[$vpsName]
+    $service = Read-Host "Enter service name (or 'all' for all services)"
+    
+    Write-InfoMsg "Showing logs from $sshTarget..."
+    
+    if ($service -eq "all") {
+        ssh $sshTarget 'docker compose logs --tail=50'
+    } else {
+        ssh $sshTarget "docker compose logs --tail=50 $service"
+    }
+}
+
+function Restart-VPSServices {
+    Write-Host "`n=== Restart VPS Services ===" -ForegroundColor Cyan
+    
+    Write-Host "Available VPS targets:"
+    $i = 1
+    $vpsArray = @()
+    $script:VPS_CONFIGS.Keys | ForEach-Object {
+        Write-Host "  $i. $_ (ubuntu@37.59.115.194)" -ForegroundColor Yellow
+        $vpsArray += $_
+        $i++
+    }
+    
+    $choice = Read-Host "`nSelect VPS target (1-$($vpsArray.Count))"
+    
+    if ($choice -match '^\d+$' -and [int]$choice -ge 1 -and [int]$choice -le $vpsArray.Count) {
+        $vpsName = $vpsArray[[int]$choice - 1]
+    } else {
+        Write-ErrorMsg "Invalid selection"
+        return
+    }
+    
+    $sshTarget = $script:VPS_CONFIGS[$vpsName]
+    Write-InfoMsg "Restarting services on $sshTarget..."
+    
+    ssh $sshTarget 'docker compose restart && docker compose ps'
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-SuccessMsg "Services restarted successfully"
+    } else {
+        Write-ErrorMsg "Restart failed"
     }
 }
 
@@ -427,8 +606,16 @@ function Show-MainMenu {
     Write-Host "  Testing                                                   " -ForegroundColor Cyan
     Write-Host "   17. Run tests                                            " -ForegroundColor Cyan
     Write-Host ""
+    Write-Host "  VPS Deployment                                            " -ForegroundColor Cyan
+    Write-Host "   18. Deploy to VPS                                        " -ForegroundColor Cyan
+    Write-Host "   19. Connect to VPS (SSH)                                 " -ForegroundColor Cyan
+    Write-Host "   20. Show VPS Status                                      " -ForegroundColor Cyan
+    Write-Host "   21. Show VPS Logs                                        " -ForegroundColor Cyan
+    Write-Host "   22. Restart VPS Services                                 " -ForegroundColor Cyan
+    Write-Host ""
     Write-Host "  Configuration                                             " -ForegroundColor Cyan
-    Write-Host "   18. Configure Docker Hub                                 " -ForegroundColor Cyan
+    Write-Host "   23. Configure Docker Hub                                 " -ForegroundColor Cyan
+    Write-Host "   24. Configure VPS                                        " -ForegroundColor Cyan
     Write-Host ""
     Write-Host "   0. Exit                                                  " -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
@@ -461,7 +648,13 @@ while ($true) {
         "15" { Invoke-Migrations }
         "16" { Invoke-DatabaseSeed }
         "17" { Invoke-Tests }
-        "18" { Set-DockerHubConfig }
+        "18" { Deploy-ToVPS }
+        "19" { Connect-VPS }
+        "20" { Show-VPSStatus }
+        "21" { Show-VPSLogs }
+        "22" { Restart-VPSServices }
+        "23" { Set-DockerHubConfig }
+        "24" { Set-VPSConfig }
         "0" {
             Write-InfoMsg "Exiting Project Manager"
             exit 0

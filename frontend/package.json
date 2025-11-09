@@ -16,6 +16,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@headlessui/react": "^2.2.9",
+    "@measured/puck": "^0.20.2",
     "@tanstack/react-query": "^5.90.7",
     "axios": "^1.13.2",
     "lucide-react": "^0.553.0",

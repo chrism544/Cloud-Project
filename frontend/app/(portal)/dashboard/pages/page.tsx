@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useAuthStore } from "@/lib/stores/auth";
 import { usePages, useCreatePage, useUpdatePage, useDeletePage } from "@/lib/hooks/usePages";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
-import { Plus, Edit, Trash2, Eye, EyeOff, FileText } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, EyeOff, FileText, ExternalLink } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function PagesPage() {
+  const router = useRouter();
   const portalId = useAuthStore((s) => s.portalId);
   const { data: pages, isLoading } = usePages(portalId || undefined);
   const createPage = useCreatePage();
@@ -160,18 +162,25 @@ export default function PagesPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => handleTogglePublish(page.id, page.isPublished)}
+                          onClick={() => router.push(`/dashboard/pages/${page.id}/preview`)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Preview"
+                        >
+                          <ExternalLink className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => router.push(`/dashboard/pages/${page.id}/edit`)}
                           className="text-indigo-600 hover:text-indigo-900"
+                          title="Edit Page Builder"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleTogglePublish(page.id, page.isPublished)}
+                          className="text-green-600 hover:text-green-900"
                           title={page.isPublished ? "Unpublish" : "Publish"}
                         >
                           {page.isPublished ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
-                        <button
-                          onClick={() => setEditingId(page.id)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Edit"
-                        >
-                          <Edit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(page.id)}

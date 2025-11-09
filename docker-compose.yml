@@ -52,6 +52,7 @@ services:
 
   # Backend API
   backend:
+    image: ${DOCKER_HUB_USERNAME:-yourusername}/portal-backend:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -62,14 +63,14 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "3001:3000"
+      - "3001:3001"
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://portal_user:portal_password@postgres:5432/portals_db
       REDIS_URL: redis://redis:6379
       JWT_SECRET: dev-jwt-secret-change-in-production
       JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production
-      PORT: 3000
+      PORT: 3001
       STORAGE_PROVIDER: local
       STORAGE_LOCAL_PATH: /app/uploads
     volumes:
@@ -78,6 +79,7 @@ services:
 
   # Frontend
   frontend:
+    image: ${DOCKER_HUB_USERNAME:-yourusername}/portal-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -88,7 +90,7 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_API_URL: http://backend:3001
 
 volumes:
   postgres_data:

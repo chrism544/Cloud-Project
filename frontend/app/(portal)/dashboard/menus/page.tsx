@@ -1,7 +1,8 @@
 "use client";
 export const dynamic = 'force-dynamic';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "@/lib/stores/auth";
+import { usePortals } from "@/lib/hooks/usePortals"; // Import usePortals
 import {
   useMenus,
   useMenu,
@@ -13,7 +14,7 @@ import {
   useReorderMenuItems,
 } from "@/lib/hooks/useMenus";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
-import { Plus, Trash2, GripVertical, Link as LinkIcon, FileText } from "lucide-react";
+import { Plus, Trash2, GripVertical, Link as LinkIcon, FileText, ChevronDown } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -87,8 +88,26 @@ function SortableMenuItem({ item, onDelete }: { item: MenuItem; onDelete: (id: s
 }
 
 export default function MenusPage() {
-  const portalId = useAuthStore((s) => s.portalId);
-  const { data: menus, isLoading } = useMenus(portalId || undefined);
+  const { portalId: authPortalId, setPortal } = useAuthStore(); // Get setPortal from useAuthStore
+  const { data: portals, isLoading: isLoadingPortals } = usePortals(); // Fetch all portals
+
+  const [selectedPortalId, setSelectedPortalId] = useState<string | undefined>(authPortalId || undefined);
+
+  // Update local selectedPortalId when authPortalId changes
+  useEffect(() => {
+    if (authPortalId && authPortalId !== selectedPortalId) {
+      setSelectedPortalId(authPortalId);
+    }
+  }, [authPortalId]);
+
+  // Update authPortalId when local selectedPortalId changes
+  useEffect(() => {
+    if (selectedPortalId && selectedPortalId !== authPortalId) {
+      setPortal(selectedPortalId);
+    }
+  }, [selectedPortalId]);
+
+  const { data: menus, isLoading } = useMenus(selectedPortalId); // Use selectedPortalId here
   const createMenu = useCreateMenu();
   const deleteMenu = useDeleteMenu();
   const createMenuItem = useCreateMenuItem();
@@ -112,16 +131,18 @@ export default function MenusPage() {
   );
 
   // Update local items when menu data changes
-  useState(() => {
+  useEffect(() => { // Changed from useState to useEffect
     if (selectedMenu?.items) {
       setLocalItems(selectedMenu.items.sort((a, b) => a.order - b.order));
+    } else {
+      setLocalItems([]); // Clear items if no menu selected or no items
     }
-  });
+  }, [selectedMenu]); // Depend on selectedMenu
 
   const handleCreateMenu = async () => {
-    if (!portalId || !menuName) return;
+    if (!selectedPortalId || !menuName) return; // Use selectedPortalId
     try {
-      const newMenu = await createMenu.mutateAsync({ portalId, name: menuName });
+      const newMenu = await createMenu.mutateAsync({ portalId: selectedPortalId, name: menuName }); // Use selectedPortalId
       setIsCreatingMenu(false);
       setMenuName("");
       setSelectedMenuId(newMenu.id);
@@ -193,15 +214,33 @@ export default function MenusPage() {
   return (
     <DashboardLayout>
       <div>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Menus</h1>
-          <button
-            onClick={() => setIsCreatingMenu(true)}
-            className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            New Menu
-          </button>
+          <div className="flex items-center gap-4">
+            {/* Portal Selector Dropdown */}
+            <div className="relative">
+              <select
+                value={selectedPortalId || ""}
+                onChange={(e) => setSelectedPortalId(e.target.value || undefined)}
+                className="w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                disabled={isLoadingPortals}
+              >
+                <option value="" disabled>Select a Portal</option>
+                {portals?.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.subdomain})</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+            </div>
+
+            <button
+              onClick={() => setIsCreatingMenu(true)}
+              className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              New Menu
+            </button>
+          </div>
         </div>
 
         {isCreatingMenu && (
@@ -221,7 +260,7 @@ export default function MenusPage() {
               <div className="flex gap-3">
                 <button
                   onClick={handleCreateMenu}
-                  disabled={createMenu.isPending}
+                  disabled={createMenu.isPending || !selectedPortalId}
                   className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
                 >
                   {createMenu.isPending ? "Creating..." : "Create"}
@@ -246,8 +285,10 @@ export default function MenusPage() {
               <div className="p-4 border-b border-gray-200">
                 <h2 className="font-semibold text-gray-900">Menu List</h2>
               </div>
-              {isLoading ? (
+              {isLoading || isLoadingPortals ? ( // Add isLoadingPortals here
                 <div className="p-4 text-center text-gray-600">Loading...</div>
+              ) : !selectedPortalId ? (
+                <div className="p-4 text-center text-gray-600">Please select a portal to view menus.</div>
               ) : menus && menus.length > 0 ? (
                 <div className="divide-y divide-gray-200">
                   {menus.map((menu) => (
@@ -275,7 +316,7 @@ export default function MenusPage() {
                   ))}
                 </div>
               ) : (
-                <div className="p-4 text-center text-gray-600">No menus yet</div>
+                <div className="p-4 text-center text-gray-600">No menus yet for this portal.</div>
               )}
             </div>
           </div>
