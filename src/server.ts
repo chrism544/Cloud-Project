@@ -23,7 +23,17 @@ dotenv.config();
 
 async function buildServer() {
   const app = Fastify({
-    logger
+    logger: {
+      level: process.env.LOG_LEVEL || (process.env.NODE_ENV === "production" ? "info" : "debug"),
+      transport: process.env.NODE_ENV === "production" ? undefined : {
+        target: "pino-pretty",
+        options: {
+          colorize: true,
+          translateTime: "SYS:standard",
+          ignore: "pid,hostname"
+        }
+      }
+    }
   });
 
   // Global plugins

@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import { FastifyInstance } from "fastify";
+import fp from "fastify-plugin";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -7,7 +8,7 @@ declare module "fastify" {
   }
 }
 
-export default async function redisPlugin(app: FastifyInstance) {
+async function redisPlugin(app: FastifyInstance) {
   const url = process.env.REDIS_URL;
   if (!url) {
     app.log.warn("REDIS_URL not set; caching disabled");
@@ -24,3 +25,5 @@ export default async function redisPlugin(app: FastifyInstance) {
 
   app.decorate("redis", redis);
 }
+
+export default fp(redisPlugin);

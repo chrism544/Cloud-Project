@@ -1,5 +1,6 @@
 import { PrismaClient } from "../generated/prisma/client";
 import { FastifyInstance } from "fastify";
+import fp from "fastify-plugin";
 
 declare module "fastify" {
   interface FastifyInstance {
@@ -7,7 +8,7 @@ declare module "fastify" {
   }
 }
 
-export default async function prismaPlugin(app: FastifyInstance) {
+async function prismaPlugin(app: FastifyInstance) {
   const prisma = new PrismaClient();
 
   app.addHook("onClose", async () => {
@@ -16,3 +17,5 @@ export default async function prismaPlugin(app: FastifyInstance) {
 
   app.decorate("prisma", prisma);
 }
+
+export default fp(prismaPlugin);

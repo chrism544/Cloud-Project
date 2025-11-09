@@ -30,7 +30,15 @@ function hashToken(token: string) {
 export default async function authRoutes(app: FastifyInstance) {
   const prefix = "/api/v1/auth";
 
-  app.post(`${prefix}/register`, async (req, reply) => {
+  // Stricter rate limiting for auth endpoints
+  const authRateLimit = {
+    config: {
+      max: 5,
+      timeWindow: "15 minutes",
+    },
+  };
+
+  app.post(`${prefix}/register`, { ...authRateLimit }, async (req, reply) => {
     const { email, password, portalId, role } = registerSchema.parse(req.body);
     const existing = await app.prisma.user.findUnique({ where: { email } });
     if (existing) return reply.code(400).send({ error: { code: "USER_EXISTS", message: "User already exists" } });
@@ -39,7 +47,7 @@ export default async function authRoutes(app: FastifyInstance) {
     reply.code(201).send({ id: user.id, email: user.email });
   });
 
-  app.post(`${prefix}/login`, async (req, reply) => {
+  app.post(`${prefix}/login`, { ...authRateLimit }, async (req, reply) => {
     const { emailOrUsername, password } = loginSchema.parse(req.body);
     const user = await app.prisma.user.findFirst({ where: { email: emailOrUsername } });
     if (!user) return reply.code(401).send({ error: { code: "INVALID_CREDENTIALS", message: "Invalid credentials" } });
@@ -80,7 +88,7 @@ export default async function authRoutes(app: FastifyInstance) {
     reply.code(204).send();
   });
 
-  app.post(`${prefix}/forgot-password`, async (req, reply) => {
+  app.post(`${prefix}/forgot-password`, { ...authRateLimit }, async (req, reply) => {
     const { email } = forgotSchema.parse(req.body);
     const user = await app.prisma.user.findFirst({ where: { email } });
     if (!user) return reply.code(200).send({ ok: true }); // avoid user enumeration
@@ -92,7 +100,7 @@ export default async function authRoutes(app: FastifyInstance) {
     reply.send({ ok: true, resetToken: process.env.NODE_ENV === "development" ? raw : undefined });
   });
 
-  app.post(`${prefix}/reset-password`, async (req, reply) => {
+  app.post(`${prefix}/reset-password`, { ...authRateLimit }, async (req, reply) => {
     const { token, newPassword } = resetSchema.parse(req.body);
     const tokenHash = hashToken(token);
     const rec = await app.prisma.passwordResetToken.findUnique({ where: { tokenHash } });

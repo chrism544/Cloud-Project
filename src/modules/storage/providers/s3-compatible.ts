@@ -33,7 +33,7 @@ export class S3CompatibleProvider implements StorageProvider {
   async uploadFile(file: Buffer, filename: string, options: UploadOptions): Promise<UploadResult> {
     const safe = filename.replace(/[^a-zA-Z0-9_.-]/g, "_");
     const objectName = `${new Date().toISOString().slice(0, 10)}/${Date.now()}_${safe}`;
-    await this.client.putObject(this.bucket, objectName, file, {
+    await this.client.putObject(this.bucket, objectName, file, file.length, {
       'Content-Type': options.mimeType,
     });
     return { path: objectName, url: this.getPublicUrl(objectName), size: file.length };
@@ -49,7 +49,7 @@ export class S3CompatibleProvider implements StorageProvider {
 
   getPublicUrl(p: string): string {
     if (this.publicBaseUrl) return `${this.publicBaseUrl}/${p}`;
-    // Fallback to bucket endpoint-style URL
-    return `https://${this.bucket}.${this.client.region() || ''}.${(this.client as any).transport?.host || ''}/${p}`;
+    // Fallback: require publicBaseUrl to be configured for production use
+    return `/${p}`;
   }
 }
