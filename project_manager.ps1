@@ -20,29 +20,29 @@ $script:VPS_CONFIGS = @{
 
 # Helper Functions
 function Write-Header {
-    Write-Host "`n╔══════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "║     Portal Management System - Project Manager          ║" -ForegroundColor Cyan
-    Write-Host "╚══════════════════════════════════════════════════════════╝`n" -ForegroundColor Cyan
+    Write-Host "`n============================================================" -ForegroundColor Cyan
+    Write-Host "     Portal Management System - Project Manager            " -ForegroundColor Cyan
+    Write-Host "============================================================`n" -ForegroundColor Cyan
 }
 
 function Write-SuccessMsg {
     param([string]$Message)
-    Write-Host "✓ $Message" -ForegroundColor Green
+    Write-Host "[OK] $Message" -ForegroundColor Green
 }
 
 function Write-ErrorMsg {
     param([string]$Message)
-    Write-Host "✗ $Message" -ForegroundColor Red
+    Write-Host "[ERROR] $Message" -ForegroundColor Red
 }
 
 function Write-InfoMsg {
     param([string]$Message)
-    Write-Host "ℹ $Message" -ForegroundColor Blue
+    Write-Host "[INFO] $Message" -ForegroundColor Blue
 }
 
 function Write-WarningMsg {
     param([string]$Message)
-    Write-Host "⚠ $Message" -ForegroundColor Yellow
+    Write-Host "[WARN] $Message" -ForegroundColor Yellow
 }
 
 # Load configuration
@@ -395,43 +395,43 @@ function Invoke-Tests {
 # Main Menu
 function Show-MainMenu {
     Write-Host ""
-    Write-Host "╔══════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "║                      MAIN MENU                           ║" -ForegroundColor Cyan
-    Write-Host "╠══════════════════════════════════════════════════════════╣" -ForegroundColor Cyan
-    Write-Host "║  Container Management                                    ║" -ForegroundColor Cyan
-    Write-Host "║    1. Start containers                                   ║" -ForegroundColor Cyan
-    Write-Host "║    2. Stop containers                                    ║" -ForegroundColor Cyan
-    Write-Host "║    3. Restart containers                                 ║" -ForegroundColor Cyan
-    Write-Host "║    4. View logs                                          ║" -ForegroundColor Cyan
-    Write-Host "║    5. Container status                                   ║" -ForegroundColor Cyan
-    Write-Host "║                                                          ║" -ForegroundColor Cyan
-    Write-Host "║  Build Management                                        ║" -ForegroundColor Cyan
-    Write-Host "║    6. Build backend                                      ║" -ForegroundColor Cyan
-    Write-Host "║    7. Build frontend                                     ║" -ForegroundColor Cyan
-    Write-Host "║    8. Build Docker images                                ║" -ForegroundColor Cyan
-    Write-Host "║    9. Rebuild entire project                             ║" -ForegroundColor Cyan
-    Write-Host "║                                                          ║" -ForegroundColor Cyan
-    Write-Host "║  Git Operations                                          ║" -ForegroundColor Cyan
-    Write-Host "║   10. Git status                                         ║" -ForegroundColor Cyan
-    Write-Host "║   11. Commit and push                                    ║" -ForegroundColor Cyan
-    Write-Host "║   12. Pull latest changes                                ║" -ForegroundColor Cyan
-    Write-Host "║                                                          ║" -ForegroundColor Cyan
-    Write-Host "║  Docker Hub                                              ║" -ForegroundColor Cyan
-    Write-Host "║   13. Login to Docker Hub                                ║" -ForegroundColor Cyan
-    Write-Host "║   14. Push images to Docker Hub                          ║" -ForegroundColor Cyan
-    Write-Host "║                                                          ║" -ForegroundColor Cyan
-    Write-Host "║  Database                                                ║" -ForegroundColor Cyan
-    Write-Host "║   15. Run migrations                                     ║" -ForegroundColor Cyan
-    Write-Host "║   16. Seed database                                      ║" -ForegroundColor Cyan
-    Write-Host "║                                                          ║" -ForegroundColor Cyan
-    Write-Host "║  Testing                                                 ║" -ForegroundColor Cyan
-    Write-Host "║   17. Run tests                                          ║" -ForegroundColor Cyan
-    Write-Host "║                                                          ║" -ForegroundColor Cyan
-    Write-Host "║  Configuration                                           ║" -ForegroundColor Cyan
-    Write-Host "║   18. Configure Docker Hub                               ║" -ForegroundColor Cyan
-    Write-Host "║                                                          ║" -ForegroundColor Cyan
-    Write-Host "║   0. Exit                                                ║" -ForegroundColor Cyan
-    Write-Host "╚══════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+    Write-Host "============================================================" -ForegroundColor Cyan
+    Write-Host "                      MAIN MENU                             " -ForegroundColor Cyan
+    Write-Host "============================================================" -ForegroundColor Cyan
+    Write-Host "  Container Management                                      " -ForegroundColor Cyan
+    Write-Host "    1. Start containers                                     " -ForegroundColor Cyan
+    Write-Host "    2. Stop containers                                      " -ForegroundColor Cyan
+    Write-Host "    3. Restart containers                                   " -ForegroundColor Cyan
+    Write-Host "    4. View logs                                            " -ForegroundColor Cyan
+    Write-Host "    5. Container status                                     " -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  Build Management                                          " -ForegroundColor Cyan
+    Write-Host "    6. Build backend                                        " -ForegroundColor Cyan
+    Write-Host "    7. Build frontend                                       " -ForegroundColor Cyan
+    Write-Host "    8. Build Docker images                                  " -ForegroundColor Cyan
+    Write-Host "    9. Rebuild entire project                               " -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  Git Operations                                            " -ForegroundColor Cyan
+    Write-Host "   10. Git status                                           " -ForegroundColor Cyan
+    Write-Host "   11. Commit and push                                      " -ForegroundColor Cyan
+    Write-Host "   12. Pull latest changes                                  " -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  Docker Hub                                                " -ForegroundColor Cyan
+    Write-Host "   13. Login to Docker Hub                                  " -ForegroundColor Cyan
+    Write-Host "   14. Push images to Docker Hub                            " -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  Database                                                  " -ForegroundColor Cyan
+    Write-Host "   15. Run migrations                                       " -ForegroundColor Cyan
+    Write-Host "   16. Seed database                                        " -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  Testing                                                   " -ForegroundColor Cyan
+    Write-Host "   17. Run tests                                            " -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  Configuration                                             " -ForegroundColor Cyan
+    Write-Host "   18. Configure Docker Hub                                 " -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "   0. Exit                                                  " -ForegroundColor Cyan
+    Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host ""
 }
 
