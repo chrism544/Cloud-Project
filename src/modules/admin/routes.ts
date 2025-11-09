@@ -104,6 +104,17 @@ export default async function adminRoutes(app: FastifyInstance) {
     reply.send(updated);
   });
 
+  // Active tokens for current portal (consumed by editors/UI)
+  app.get(`${prefix}/themes/active/tokens`, async (req, reply) => {
+    await app.authenticate(req, reply); // only authenticated users
+    // @ts-ignore
+    if (reply.sent) return;
+    const { portalId } = (req.query as any) || {};
+    if (!portalId) return reply.code(400).send({ error: { code: "PORTAL_ID_REQUIRED", message: "portalId is required" } });
+    const active = await app.prisma.theme.findFirst({ where: { portalId, isActive: true } });
+    reply.send(active?.tokens || {});
+  });
+
   // ================
   // Users (basic list)
   // ================
