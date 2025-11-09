@@ -149,4 +149,41 @@ export default async function adminRoutes(app: FastifyInstance) {
     const logs = await app.prisma.auditLog.findMany({ where, orderBy: { createdAt: "desc" }, take: 200 });
     reply.send(logs);
   });
+
+  // ================
+  // Security Alerts
+  // ================
+  app.get(`${prefix}/security-alerts`, async (req, reply) => {
+    await requireAdmin(app, req, reply);
+    // @ts-ignore
+    if (reply.sent) return;
+    const { portalId } = (req.query as any) || {};
+    if (!portalId) return reply.code(400).send({ error: { code: "PORTAL_ID_REQUIRED", message: "portalId is required" } });
+    const alerts = await app.prisma.securityAlert.findMany({ where: { portalId }, orderBy: { createdAt: "desc" }, take: 200 });
+    reply.send(alerts);
+  });
+
+  app.put(`${prefix}/security-alerts/:id/resolve`, async (req, reply) => {
+    await requireAdmin(app, req, reply);
+    // @ts-ignore
+    if (reply.sent) return;
+    const { id } = req.params as { id: string };
+    // @ts-ignore
+    const userId = req.user.sub as string;
+    const updated = await app.prisma.securityAlert.update({ where: { id }, data: { resolved: true, resolvedBy: userId, resolvedAt: new Date() } });
+    reply.send(updated);
+  });
+
+  // ================
+  // Permissions Audit
+  // ================
+  app.get(`${prefix}/permissions/audit`, async (req, reply) => {
+    await requireAdmin(app, req, reply);
+    // @ts-ignore
+    if (reply.sent) return;
+    const { portalId } = (req.query as any) || {};
+    if (!portalId) return reply.code(400).send({ error: { code: "PORTAL_ID_REQUIRED", message: "portalId is required" } });
+    const links = await app.prisma.userOnPortal.findMany({ where: { portalId }, include: { user: true }, take: 500 });
+    reply.send(links.map(l => ({ userId: l.userId, email: l.user?.email, role: l.assignedRole, isActive: l.isActive })));
+  });
 }
