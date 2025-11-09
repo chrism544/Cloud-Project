@@ -18,7 +18,6 @@ RUN npx prisma generate
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/src/generated ./src/generated
 COPY . .
 
 # Build TypeScript
@@ -35,7 +34,6 @@ RUN adduser --system --uid 1001 fastify
 
 # Copy built application
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/src/generated ./generated
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
