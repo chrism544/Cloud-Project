@@ -371,6 +371,178 @@ npm run test:e2e:ui       # Playwright UI mode
 - CPU load average
 - System information
 
+## Phase 10: CI/CD Pipeline & Deployment (Complete)
+
+**Docker Configuration:**
+- `Dockerfile` - Multi-stage build for backend (deps, builder, runner)
+  - Non-root user (fastify:1001)
+  - Alpine Linux for minimal image size
+  - Production-optimized Node.js 20
+- `frontend/Dockerfile` - Multi-stage build for frontend
+  - Non-root user (nextjs:1001)
+  - Standalone Next.js output for minimal runtime
+- `.dockerignore` - Excludes unnecessary files from build context
+
+**Docker Compose:**
+- `docker-compose.yml` - Complete local development stack
+  - Services: postgres, redis, minio (optional), backend, frontend
+  - Health checks for all services
+  - Volume mounts for hot reload in development
+  - Automatic database migrations on startup
+  - Environment variable configuration
+
+**GitHub Actions CI/CD:**
+- `.github/workflows/ci-cd.yml` - Comprehensive CI/CD pipeline
+  - Jobs: backend-test, frontend-test, security-scan, build-push, deploy
+  - PostgreSQL and Redis services for testing
+  - Code coverage reporting with Codecov
+  - npm audit for dependency vulnerabilities
+  - Trivy container security scanning
+  - Docker image building and pushing to Docker Hub
+  - Automated deployment on push to main
+
+**Kubernetes Deployment:**
+- `k8s/backend-deployment.yaml` - Backend deployment with:
+  - 3 replicas with HPA (2-10 pods based on CPU/memory)
+  - Liveness and readiness probes
+  - Resource limits and requests
+  - PVC for file uploads
+  - Environment variables from ConfigMap and Secrets
+- `k8s/frontend-deployment.yaml` - Frontend deployment with HPA
+- `k8s/database.yaml` - PostgreSQL StatefulSet and Redis Deployment
+  - PVC for PostgreSQL data persistence
+  - Health checks and resource limits
+- `k8s/ingress.yaml` - Nginx Ingress with:
+  - TLS/SSL with cert-manager integration
+  - Security headers (X-Frame-Options, CSP, HSTS)
+  - Rate limiting (100 req/min)
+  - Separate hosts for frontend and backend
+
+**Usage:**
+```bash
+# Local development
+docker-compose up -d
+
+# Kubernetes deployment
+kubectl apply -f k8s/
+
+# CI/CD
+# Push to main branch triggers automated pipeline
+```
+
+## Phase 11: Security Hardening (Complete)
+
+**Security Headers:**
+- `src/utils/security-headers.ts` - OWASP-compliant security headers
+  - X-Frame-Options: DENY
+  - X-Content-Type-Options: nosniff
+  - X-XSS-Protection: 1; mode=block
+  - Content-Security-Policy with strict directives
+  - Strict-Transport-Security with preload
+  - Referrer-Policy, Permissions-Policy
+
+**Security Documentation:**
+- `SECURITY.md` - Comprehensive security policy
+  - Vulnerability reporting procedures
+  - Authentication & authorization details
+  - API security measures (rate limiting, input validation, CORS)
+  - Data protection strategies (multi-tenancy, encryption)
+  - Database and infrastructure security
+  - Security best practices for developers and operators
+  - Production deployment security checklist
+  - Regular maintenance schedule
+  - Compliance considerations (GDPR, SOC 2)
+  - Incident response procedures
+
+**Security Features Implemented:**
+- JWT-based authentication with refresh token rotation
+- Bcrypt password hashing (10 salt rounds)
+- Rate limiting (100 req/min global, 5 req/15min for auth)
+- RBAC with hierarchical roles
+- Row-level multi-tenancy isolation
+- Input validation with Zod schemas
+- SQL injection prevention via Prisma ORM
+- XSS prevention via output encoding
+- CORS configuration
+- Container security (non-root users, minimal images)
+
+## Phase 12: Performance Optimization (Complete)
+
+**Performance Monitoring:**
+- `src/utils/performance-monitoring.ts` - Comprehensive performance tracking
+  - `performanceMonitoringHook()` - Tracks request duration, logs slow requests
+  - `QueryPerformanceTracker` - Database query metrics (count, avg, min, max, P95)
+  - `CachePerformanceTracker` - Cache hit/miss rates and latency
+  - `getMemoryStats()` - Heap usage and RSS monitoring
+  - `getCPUStats()` - CPU time tracking
+  - Global trackers: `queryTracker`, `cacheTracker`
+
+**Performance Documentation:**
+- `PERFORMANCE.md` - Complete optimization guide
+  - Database optimization (indexes, N+1 queries, pagination, connection pooling)
+  - Caching strategy (Redis patterns, cache warming, invalidation)
+  - API performance (compression, pagination, HTTP/2, keep-alive)
+  - Frontend optimization (React Query, Next.js, code splitting)
+  - Performance monitoring (KPIs, endpoints, testing tools)
+  - Resource optimization (memory management, CPU usage)
+  - Scalability strategies (horizontal/vertical scaling, read replicas, CDN)
+  - Performance checklist (development, pre-production, production)
+  - Recommended tools (Artillery, autocannon, clinic.js, Datadog)
+
+**Performance Targets:**
+- Response times: P50 < 100ms, P95 < 500ms, P99 < 1000ms
+- Database queries: Average < 50ms, P95 < 200ms
+- Cache hit rate: > 80%
+- Error rate: < 0.1%
+
+**Optimizations Implemented:**
+- Response compression with @fastify/compress
+- Redis caching for pages, menus, asset containers
+- Prisma connection pooling
+- Pagination on all list endpoints
+- Optimistic updates in frontend with React Query
+- Next.js image optimization
+- Code splitting with dynamic imports
+
+## Phase 13: Documentation & Deployment Guides (Complete)
+
+**API Documentation:**
+- `API.md` - Comprehensive API reference
+  - Base URL configuration
+  - Authentication flow (JWT tokens)
+  - All API endpoints with request/response examples
+  - Auth: register, login, refresh, logout, password reset
+  - Portals: CRUD operations
+  - Pages: CRUD with publish/unpublish
+  - Menus & Menu Items: CRUD with reordering
+  - Asset Containers & Assets: CRUD with file upload
+  - Storage: direct upload, presigned URLs, delete
+  - Health: basic, detailed, ready, live, metrics
+  - Error codes and rate limiting
+  - Interactive Swagger UI documentation
+
+**Deployment Guide:**
+- `DEPLOYMENT.md` - Complete deployment guide
+  - Environment variables reference
+  - Local development with Docker Compose
+  - Production deployment options:
+    - Docker Compose with Nginx reverse proxy
+    - Kubernetes with kubectl commands
+    - Cloud providers (AWS ECS/Fargate, Google Cloud Run, Azure Container Instances)
+  - Database migration strategies
+  - Monitoring & logging
+  - Backup & recovery procedures
+  - Scaling strategies (horizontal & vertical)
+  - Security checklist
+  - Troubleshooting common issues
+  - Rollback procedures
+
+**Performance Guide:**
+- Already documented in Phase 12 (`PERFORMANCE.md`)
+
+**Security Policy:**
+- Already documented in Phase 11 (`SECURITY.md`)
+
 ## Phase Progress
 
 According to `Project Plan - Updated.md`:
@@ -384,6 +556,11 @@ According to `Project Plan - Updated.md`:
 - ✅ Phase 7: Frontend UI & API Integration
 - ✅ Phase 8: Comprehensive Testing & QA
 - ✅ Phase 9: Observability & Monitoring
-- ⏳ Phase 10+: CI/CD, Security Audits, Performance Optimization, Documentation, Deployment
+- ✅ Phase 10: CI/CD Pipeline & Deployment
+- ✅ Phase 11: Security Hardening
+- ✅ Phase 12: Performance Optimization
+- ✅ Phase 13: Documentation & Deployment Guides
 
-**Next Steps:** Phase 10 (CI/CD Pipeline), Phase 11 (Security Audits), or Phase 12 (Performance Optimization).
+**Status:** All phases complete! The Portal Management System is production-ready.
+
+**Next Steps:** Deploy to production using the guides in `DEPLOYMENT.md`, or continue with optional enhancements (Puck editor integration, email notifications, audit logging).
