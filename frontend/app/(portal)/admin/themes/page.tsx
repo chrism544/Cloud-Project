@@ -53,7 +53,7 @@ export default function AdminThemesPage() {
             themes.map((t) => (
               <div key={t.id} className="p-4 flex items-center justify-between">
                 <div>
-                  <div className="font-medium text-gray-900">{t.name}</div>
+                  <div className="font-medium text-gray-900"><a href={`/admin/themes/${t.id}`} className="hover:underline">{t.name}</a></div>
                   <div className="text-sm text-gray-500">{t.isActive ? "Active" : "Inactive"}</div>
                 </div>
                 {!t.isActive && (
