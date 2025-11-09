@@ -1,4 +1,4 @@
-import { PrismaClient } from "../generated/prisma/client";
+import { PrismaClient } from "../generated/prisma";
 import { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
 
