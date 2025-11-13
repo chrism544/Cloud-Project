@@ -7,9 +7,9 @@
 $CONFIG_FILE = ".project_manager.conf"
 
 # Default values
-$script:DOCKER_HUB_USERNAME = $env:DOCKER_HUB_USERNAME
-$script:DOCKER_HUB_REPO_BACKEND = "portal-backend"
-$script:DOCKER_HUB_REPO_FRONTEND = "portal-frontend"
+$script:DOCKER_HUB_USERNAME = "chrism544"
+$script:DOCKER_HUB_REPO_BACKEND = "cloud_project_backend"
+$script:DOCKER_HUB_REPO_FRONTEND = "cloud_project_frontend"
 
 # VPS configurations
 $script:VPS_CONFIGS = @{

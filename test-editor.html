@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Editor Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        h2 { color: #666; margin-top: 0; }
+        .status { padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover { background: #4338CA; }
+        #result { margin-top: 20px; }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Portal Management System - Editor Test</h1>
+
+    <div class="test-section">
+        <h2>Test Instructions</h2>
+        <p>This page helps verify that the new Puck editor integration is working correctly.</p>
+        <ol>
+            <li>Click "Test Backend API" to verify backend is responding</li>
+            <li>Login with test credentials (admin@example.com / ChangeMe123!)</li>
+            <li>Navigate to a page editor to test the new click-to-add functionality</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>1. Backend API Test</h2>
+        <button onclick="testBackend()">Test Backend API</button>
+        <div id="backendResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Frontend Access</h2>
+        <p class="info">Frontend URL: <a href="http://localhost:3001" target="_blank">http://localhost:3001</a></p>
+        <p>Expected behavior:</p>
+        <ul>
+            <li>Login page should load</li>
+            <li>After login, dashboard should show</li>
+            <li>Navigate to Pages → Select a page → Click Edit</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Editor Verification Checklist</h2>
+        <p>Once in the editor, verify:</p>
+        <ul>
+            <li>✓ Component sidebar shows 3 categories: <strong>Basic</strong>, <strong>Layout</strong>, <strong>General</strong></li>
+            <li>✓ Basic category contains: Heading, Text, Button, Image</li>
+            <li>✓ Layout category contains: Container, Columns, Spacer, Divider</li>
+            <li>✓ General category contains: Video</li>
+            <li>✓ <strong>DRAG-AND-DROP</strong> works - grab widgets and drag them to canvas</li>
+            <li>✓ Drop zones appear with blue highlight when dragging over them</li>
+            <li>✓ Properties panel on the right shows tabs: Content, Style, Advanced</li>
+            <li>✓ Switching tabs organizes fields (all fields visible, tabs provide visual organization)</li>
+            <li>✓ Selecting a component shows ALL its properties across tabs</li>
+            <li>✓ Widgets don't disappear when switching tabs</li>
+            <li>✓ Container widget allows nested content (drag widgets inside it)</li>
+            <li>✓ Columns widget allows multiple columns (drag widgets into each column)</li>
+            <li>✓ Viewport controls (Desktop/Tablet/Mobile) work correctly</li>
+            <li>✓ Publish button works and saves changes</li>
+        </ul>
+        <p><strong>Key Features:</strong></p>
+        <ul>
+            <li>✅ <strong>Native drag-and-drop</strong> - Grab and drag widgets from sidebar to canvas</li>
+            <li>✅ <strong>Categorized widgets</strong> - Organized under Basic, Layout, and General headings</li>
+            <li>✅ <strong>Nested layouts</strong> - Container and Columns support nested drop zones</li>
+            <li>✅ <strong>Dark theme</strong> - Professional dark UI throughout the editor</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Credentials</h2>
+        <div class="info">
+            <p><strong>Email:</strong> <code>admin@example.com</code></p>
+            <p><strong>Password:</strong> <code>ChangeMe123!</code></p>
+        </div>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        async function testBackend() {
+            const resultDiv = document.getElementById('backendResult');
+            resultDiv.innerHTML = '<div class="info">Testing backend API...</div>';
+
+            try {
+                const response = await fetch('http://localhost:3001/api/v1/health');
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <strong>✓ Backend API is responding!</strong><br>
+                            Status: ${data.status}<br>
+                            Timestamp: ${data.timestamp}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <strong>✗ Backend API error</strong><br>
+                            Status: ${response.status}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <strong>✗ Cannot connect to backend</strong><br>
+                        Error: ${error.message}<br>
+                        Make sure backend is running on port 3001
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

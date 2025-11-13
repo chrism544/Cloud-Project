@@ -2,6 +2,7 @@ import path from "path";
 import { FastifyInstance } from "fastify";
 import { StorageProviderFactory } from "./factory";
 import { z } from "zod";
+import { processImage, isImage } from "../../utils/imageProcessor";
 
 export default async function storageRoutes(app: FastifyInstance) {
   const prefix = "/api/v1/storage";
@@ -14,6 +15,37 @@ export default async function storageRoutes(app: FastifyInstance) {
     const mp = await req.file();
     if (!mp) return reply.code(400).send({ error: { code: "NO_FILE", message: "No file uploaded" } });
     const buf = await mp.toBuffer();
+
+    // Process images with Sharp
+    if (isImage(mp.mimetype)) {
+      try {
+        const processedImages = await processImage(buf, mp.filename, {
+          generateSizes: true,
+          convertToWebP: true,
+          quality: 85,
+        });
+
+        // Upload all variants
+        const uploadResults = [];
+        for (const img of processedImages) {
+          const result = await provider.uploadFile(img.buffer, img.filename, {
+            mimeType: img.mimeType
+          });
+          uploadResults.push(result);
+        }
+
+        return reply.code(201).send({
+          original: uploadResults[0],
+          variants: uploadResults.slice(1),
+          totalVariants: uploadResults.length,
+        });
+      } catch (error) {
+        app.log.error(error, "Image processing failed");
+        // Fall back to original upload if processing fails
+      }
+    }
+
+    // Non-image files or fallback
     const res = await provider.uploadFile(buf, mp.filename, { mimeType: mp.mimetype });
     reply.code(201).send(res);
   });

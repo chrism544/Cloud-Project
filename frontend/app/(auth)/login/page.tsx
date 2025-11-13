@@ -17,11 +17,17 @@ export default function LoginPage() {
   const setPortal = useAuthStore((s) => s.setPortal);
 
   useEffect(() => {
+    console.log("Fetching portals from:", window.location.hostname);
     api.get("/api/v1/portals").then((r) => {
+      console.log("Portals response:", r.data);
       setPortals(r.data);
       if (r.data?.length) {
         setSelectedPortal(r.data[0].id);
       }
+    }).catch((err) => {
+      console.error("Failed to load portals:", err);
+      console.error("Error details:", err.response?.data, err.message);
+      setError("Failed to load portals. Please check your connection.");
     });
   }, []);
 

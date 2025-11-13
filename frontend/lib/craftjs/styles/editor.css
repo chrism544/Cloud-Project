@@ -1,0 +1,88 @@
+/* Craft.js Editor Styles */
+
+/* Selected/Hovered Component Highlight */
+.component-selected {
+  outline: 2px solid #4F46E5 !important;
+  outline-offset: 2px;
+  position: relative;
+}
+
+/* Canvas Hover States */
+.craft-container:hover,
+.craft-section:hover,
+.craft-column:hover,
+.craft-inner-section:hover {
+  outline: 2px dashed #93C5FD;
+  outline-offset: 2px;
+}
+
+/* Widget Hover States */
+.craft-heading:hover,
+.craft-text:hover,
+.craft-button:hover,
+.craft-image:hover,
+.craft-video:hover,
+.craft-icon:hover,
+.craft-icon-box:hover,
+.craft-image-box:hover,
+.craft-divider:hover,
+.craft-spacer:hover {
+  outline: 2px solid #4F46E5;
+  outline-offset: 2px;
+  cursor: pointer;
+}
+
+/* Drop Zone Indicators */
+.craft-drop-indicator {
+  position: absolute;
+  background: #4F46E5;
+  height: 2px;
+  width: 100%;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.craft-drop-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  background: #4F46E5;
+  border-radius: 50%;
+}
+
+/* Empty Container Placeholder */
+.craft-container:empty::before,
+.craft-section:empty::before,
+.craft-column:empty::before {
+  content: 'Drop widgets here';
+  display: block;
+  padding: 40px;
+  text-align: center;
+  color: #9CA3AF;
+  font-size: 14px;
+  border: 2px dashed #E5E7EB;
+  border-radius: 8px;
+}
+
+/* Prevent selection interference during drag */
+.craftjs-renderer * {
+  user-select: none;
+}
+
+/* Allow text selection in edit mode */
+[contenteditable="true"] {
+  user-select: text !important;
+  outline: 2px solid #10B981 !important;
+  outline-offset: 2px;
+}
+
+/* Smooth transitions */
+.craft-heading,
+.craft-text,
+.craft-button,
+.craft-image {
+  transition: outline 0.15s ease;
+}

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface AuthState {
   accessToken: string | null;
@@ -9,23 +10,31 @@ interface AuthState {
   setPortal: (id: string | null) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  accessToken: null,
-  refreshToken: null,
-  portalId: null,
-  setTokens: (access, refresh) => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("accessToken", access);
-      localStorage.setItem("refreshToken", refresh);
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      accessToken: null,
+      refreshToken: null,
+      portalId: null,
+      setTokens: (access, refresh) => {
+        set({ accessToken: access, refreshToken: refresh });
+      },
+      clear: () => {
+        set({ accessToken: null, refreshToken: null, portalId: null });
+      },
+      setPortal: (id) => {
+        console.log("Setting portalId in store:", id);
+        set({ portalId: id });
+      },
+    }),
+    {
+      name: "auth-storage",
+      // Only persist these fields
+      partialize: (state) => ({
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        portalId: state.portalId,
+      }),
     }
-    set({ accessToken: access, refreshToken: refresh });
-  },
-  clear: () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-    }
-    set({ accessToken: null, refreshToken: null });
-  },
-  setPortal: (id) => set({ portalId: id }),
-}));
+  )
+);

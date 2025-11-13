@@ -20,18 +20,34 @@ export default function PagesPage() {
   const [formData, setFormData] = useState({ title: "", slug: "", content: {} });
 
   const handleCreate = async () => {
-    if (!portalId || !formData.title || !formData.slug) return;
+    console.log("Create button clicked", { portalId, formData });
+    if (!portalId) {
+      alert("Portal ID is missing. Please log in again.");
+      return;
+    }
+    if (!formData.title) {
+      alert("Please enter a title");
+      return;
+    }
+    if (!formData.slug) {
+      alert("Please enter a slug");
+      return;
+    }
     try {
-      await createPage.mutateAsync({
+      const newPage = await createPage.mutateAsync({
         portalId,
         title: formData.title,
         slug: formData.slug,
         content: formData.content,
       });
+      console.log("Page created:", newPage);
       setIsCreating(false);
       setFormData({ title: "", slug: "", content: {} });
-    } catch (error) {
+      // Immediately redirect to Puck editor
+      router.push(`/dashboard/pages/${newPage.id}/edit`);
+    } catch (error: any) {
       console.error("Failed to create page:", error);
+      alert(`Failed to create page: ${error.response?.data?.message || error.message}`);
     }
   };
 

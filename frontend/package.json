@@ -13,16 +13,20 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@craftjs/core": "^0.2.12",
+    "@craftjs/utils": "^0.2.5",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@headlessui/react": "^2.2.9",
-    "@measured/puck": "^0.20.2",
+    "@monaco-editor/react": "^4.6.0",
     "@tanstack/react-query": "^5.90.7",
     "axios": "^1.13.2",
     "lucide-react": "^0.553.0",
     "next": "16.0.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "react-syntax-highlighter": "^15.5.0",
+    "recharts": "^2.12.7",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -34,6 +38,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "jest": "^30.2.0",

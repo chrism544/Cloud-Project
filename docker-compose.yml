@@ -52,7 +52,7 @@ services:
 
   # Backend API
   backend:
-    image: ${DOCKER_HUB_USERNAME:-yourusername}/portal-backend:latest
+    image: chrism544/cloud_project_backend:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -79,7 +79,7 @@ services:
 
   # Frontend
   frontend:
-    image: ${DOCKER_HUB_USERNAME:-yourusername}/portal-frontend:latest
+    image: chrism544/cloud_project_frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -90,9 +90,26 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://backend:3001
+
+  # Caddy Reverse Proxy
+  caddy:
+    image: caddy:2-alpine
+    container_name: portal-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  caddy_data:
+  caddy_config:
