@@ -18,9 +18,19 @@ export const useAuthStore = create<AuthState>()(
       portalId: null,
       setTokens: (access, refresh) => {
         set({ accessToken: access, refreshToken: refresh });
+        // Also store in localStorage for API client compatibility
+        if (typeof window !== "undefined") {
+          localStorage.setItem("accessToken", access);
+          localStorage.setItem("refreshToken", refresh);
+        }
       },
       clear: () => {
         set({ accessToken: null, refreshToken: null, portalId: null });
+        // Also clear from localStorage
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+        }
       },
       setPortal: (id) => {
         console.log("Setting portalId in store:", id);

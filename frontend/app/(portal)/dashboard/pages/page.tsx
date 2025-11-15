@@ -43,7 +43,7 @@ export default function PagesPage() {
       console.log("Page created:", newPage);
       setIsCreating(false);
       setFormData({ title: "", slug: "", content: {} });
-      // Immediately redirect to Puck editor
+      // Immediately redirect to page editor
       router.push(`/dashboard/pages/${newPage.id}/edit`);
     } catch (error: any) {
       console.error("Failed to create page:", error);
@@ -187,7 +187,7 @@ export default function PagesPage() {
                         <button
                           onClick={() => router.push(`/dashboard/pages/${page.id}/edit`)}
                           className="text-indigo-600 hover:text-indigo-900"
-                          title="Edit Page Builder"
+                          title="Edit Page"
                         >
                           <Edit className="w-5 h-5" />
                         </button>

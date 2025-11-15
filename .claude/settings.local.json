@@ -45,7 +45,21 @@
       "Bash(powershell -ExecutionPolicy Bypass -File:*)",
       "mcp__zen__debug",
       "Bash(ls:*)",
-      "Bash(docker-compose stop:*)"
+      "Bash(docker-compose stop:*)",
+      "Bash(timeout 15 bash:*)",
+      "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(timeout /t 3)",
+      "Bash(tasklist:*)",
+      "Bash(git checkout:*)",
+      "Bash(timeout 45 bash:*)",
+      "Bash(npm ls:*)",
+      "Bash(timeout 10 bash -c \"until docker logs portal-postgres 2>&1 | grep -q ''database system is ready to accept connections''; do sleep 1; done; echo Database ready\")",
+      "Bash(timeout 10 bash:*)",
+      "Bash($env:PORT=3001)",
+      "Bash(powershell -Command \"Stop-Process -Id 4224 -Force\")",
+      "Bash(npx prisma migrate:*)",
+      "Bash(ping:*)",
+      "Bash(timeout 30 bash:*)"
     ],
     "deny": [],
     "ask": []

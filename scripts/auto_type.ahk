@@ -23,6 +23,34 @@ TargetEnabled := 0
 TargetMode := "title" ; "title" | "class" | "exe"
 TargetValue := "" ; set to e.g. "Visual Studio Code" or "Chrome_WidgetWin_1" or "Code.exe"
 
+; Default send text for daily run
+DefaultSendText := "try"
+; Temporary override text for tests; set when scheduling a one-off test
+TestSendOverride := ""
+
+; PreventLock: when enabled, the script will request the system keep display and system awake
+; for a short time around the send. Set to 1 to enable.
+PreventLock := 1
+; How long (ms) to hold the execution state after sending
+PreventLockHoldMs := 120000 ; 2 minutes
+
+; Hotkey: schedule a one-shot 60s test that sends "retry" (useful to trigger now)
+; Press F10 to schedule the 60-second test. Focus the target window first.
+F10::
+    TestSendOverride := "retry"
+    SetTimer, DoTestSend, -60000
+    Tooltip, Scheduled test: will send "retry" in 60s., 10, 10
+    Sleep, 1500
+    Tooltip
+return
+
+DoTestSend:
+    ; call DoSend which will use TestSendOverride if set
+    Gosub, DoSend
+    ; ensure override is cleared after use
+    TestSendOverride := ""
+return
+
 ; Check every 10 seconds
 SetTimer, CheckTime, 10000
 return
@@ -90,6 +118,22 @@ DoSend:
         Sleep, 120
     }
 
-    ; Send 'try' and Enter to the active window
-    SendInput, try{Enter}
+    ; Prevent screen lock/sleep if requested: briefly set EXECUTION STATE
+    if (PreventLock) {
+        ; ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED = 0x80000003
+        DllCall("SetThreadExecutionState", "UInt", 0x80000003)
+    }
+
+    ; Choose text to send: use TestSendOverride when set (for test), otherwise use DefaultSendText
+    SendText := (TestSendOverride != "") ? TestSendOverride : DefaultSendText
+    SendInput, %SendText%
+    Sleep, 50
+    SendInput, {Enter}
+
+    if (PreventLock) {
+        ; keep the execution state for a short period so display/sleep don't engage immediately
+        Sleep, PreventLockHoldMs
+        ; Clear continuous flags: ES_CONTINUOUS = 0x80000000
+        DllCall("SetThreadExecutionState", "UInt", 0x80000000)
+    }
 return

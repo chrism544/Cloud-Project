@@ -73,10 +73,23 @@ Scheduling with Task Scheduler (PowerShell)
    - Add arguments: `-STA -WindowStyle Hidden -File "C:\\Cloud Project\\scripts\\auto_type.ps1"`
 4. Set "Run only when user is logged on" if the task must send keystrokes to the active desktop. If you set "Run whether user is logged on or not", the script will run in a non-interactive session and SendKeys will not reach your desktop.
 
+Automated Task creation helper
+- There's a helper PowerShell script `scripts\\create_task.ps1` that will attempt to create a scheduled task named `CloudProjectAutoType` to run the AHK script daily at 01:00 as the current interactive user.
+- Run it from the `scripts` folder:
+
+```powershell
+cd "C:\\Cloud Project\\scripts"
+.\create_task.ps1
+```
+
+It will prompt for the path to `AutoHotkey.exe` (a sensible default is offered). The created task uses Interactive logon so keystrokes can reach the desktop. If you prefer to manually create the task via Task Scheduler, use the guidance above.
+
 Testing
 - AutoHotkey quick test
   - Option A (manual): Run the script and press F9 to immediately send `try` + Enter to the active window.
   - Option B (auto on start): Edit `scripts\\auto_type.ahk` and set `TestMode := 1` near the top; on launch the script will perform one immediate send and then revert to normal daily behavior.
+
+  - Option C (delayed test -> "retry"): Run the script and press `F10` to schedule a one-shot test that will send `retry` + Enter after 60 seconds. Focus the intended target window before pressing F10.
 
 - PowerShell quick test
   - Use the `-Test` switch to send immediately and exit:
@@ -86,6 +99,15 @@ powershell.exe -STA -File "C:\\Cloud Project\\scripts\\auto_type.ps1" -Test
 ```
 
 Notes: both scripts send keystrokes to whatever window is active. For reliable testing, focus a safe target window (like Notepad or an open terminal) before triggering the test mode. After verifying, undo any TestMode flag changes.
+
+Preventing the screen from locking
+---------------------------------
+- `auto_type.ahk` supports `PreventLock := 1` which will request the system to keep the display and system awake briefly around the send (default hold is 2 minutes). This uses the Windows API `SetThreadExecutionState` and is intended to prevent the display from turning off or the system from sleeping during the send.
+- To enable, edit `scripts\\auto_type.ahk` and set:
+
+  PreventLock := 1
+
+- Note: this is a short-lived prevention to cover the send itself; it does not permanently disable lock/screensaver. For permanent changes you'd normally adjust power settings or group policy, but that's not recommended for security reasons.
 
 If you want, I can:
 - Adjust the AutoHotkey script to target a specific window title/class (e.g., VS Code integrated terminal) so keystrokes always go to the intended target.

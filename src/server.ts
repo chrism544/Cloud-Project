@@ -19,6 +19,7 @@ import authRoutes from "@modules/auth/routes";
 import adminRoutes from "@modules/admin/routes";
 import authPlugin from "@plugins/auth";
 import healthRoutes from "@modules/health/routes";
+import builderRoutes from "@modules/builder/routes";
 
 // Load environment variables from .env if present
 dotenv.config();
@@ -85,6 +86,7 @@ async function buildServer() {
     await healthRoutes(instance, {});
     const storageRoutes = await import("@modules/storage/routes").then(m => m.default);
     await storageRoutes(instance);
+    await instance.register(builderRoutes, { prefix: '/api/v1/builder' });
   });
 
   // Global error handler

@@ -4,6 +4,7 @@ import { usePortal } from "@/lib/hooks/usePortals";
 import { usePages } from "@/lib/hooks/usePages";
 import { useMenus } from "@/lib/hooks/useMenus";
 import { useAssetContainers } from "@/lib/hooks/useAssetContainers";
+import { useBuilderPages } from "@/lib/hooks/useBuilderPages";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { FileText, Menu, Palette, Upload } from "lucide-react";
 
@@ -15,11 +16,13 @@ export default function DashboardPage() {
   const { data: pages } = usePages(portalId || undefined);
   const { data: menus } = useMenus(portalId || undefined);
   const { data: containers } = useAssetContainers(portalId || undefined);
+  const { data: builderPages } = useBuilderPages(portalId || "");
 
   const stats = [
     { name: "Pages", value: pages?.length || 0, icon: FileText, href: "/dashboard/pages" },
+    { name: "Builder Pages", value: builderPages?.length || 0, icon: Palette, href: "/dashboard/builder" },
     { name: "Menus", value: menus?.length || 0, icon: Menu, href: "/dashboard/menus" },
-    { name: "Asset Containers", value: containers?.length || 0, icon: Palette, href: "/dashboard/assets" },
+    { name: "Asset Containers", value: containers?.length || 0, icon: Upload, href: "/dashboard/assets" },
   ];
 
   return (
@@ -59,6 +62,13 @@ export default function DashboardPage() {
             >
               <span className="font-medium text-gray-900">Create a new page</span>
               <p className="text-sm text-gray-600 mt-1">Add content to your portal</p>
+            </a>
+            <a
+              href="/dashboard/builder"
+              className="block px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <span className="font-medium text-gray-900">Build visual pages</span>
+              <p className="text-sm text-gray-600 mt-1">Create pages with drag-and-drop editor</p>
             </a>
             <a
               href="/dashboard/menus"
