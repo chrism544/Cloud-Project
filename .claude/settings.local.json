@@ -59,7 +59,14 @@
       "Bash(powershell -Command \"Stop-Process -Id 4224 -Force\")",
       "Bash(npx prisma migrate:*)",
       "Bash(ping:*)",
-      "Bash(timeout 30 bash:*)"
+      "Bash(timeout 30 bash:*)",
+      "WebFetch(domain:grapesjs.com)",
+      "WebFetch(domain:jsfiddle.net)",
+      "WebFetch(domain:github.com)",
+      "Bash(\"C:\\Cloud Project\\frontend\\components\\builder\\customComponents.ts\")",
+      "WebFetch(domain:developers.elementor.com)",
+      "WebFetch(domain:mui.com)",
+      "Bash(npm info:*)"
     ],
     "deny": [],
     "ask": []

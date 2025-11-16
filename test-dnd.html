@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DnD Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-container { 
+            border: 2px dashed #ccc; 
+            padding: 20px; 
+            margin: 10px 0; 
+            min-height: 100px;
+            background: #f9f9f9;
+        }
+        .test-item { 
+            background: #007bff; 
+            color: white; 
+            padding: 10px; 
+            margin: 5px; 
+            cursor: grab; 
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .test-item:active { cursor: grabbing; }
+        .drag-over { background: #e7f3ff; border-color: #007bff; }
+    </style>
+</head>
+<body>
+    <h1>Drag and Drop Test</h1>
+    <p>Test if basic HTML5 DnD works in your browser:</p>
+    
+    <div class="test-container" id="source">
+        <h3>Drag from here:</h3>
+        <div class="test-item" draggable="true" data-item="button">Button Widget</div>
+        <div class="test-item" draggable="true" data-item="text">Text Widget</div>
+        <div class="test-item" draggable="true" data-item="image">Image Widget</div>
+    </div>
+    
+    <div class="test-container" id="target">
+        <h3>Drop here:</h3>
+        <p>Drag items from above to this area</p>
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+        const log = document.getElementById('log');
+        const target = document.getElementById('target');
+        const items = document.querySelectorAll('.test-item');
+
+        function addLog(message) {
+            const p = document.createElement('p');
+            p.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            log.appendChild(p);
+        }
+
+        // Add drag event listeners to items
+        items.forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.dataset.item);
+                addLog(`Started dragging ${e.target.dataset.item}`);
+            });
+        });
+
+        // Add drop zone listeners
+        target.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            target.classList.add('drag-over');
+        });
+
+        target.addEventListener('dragleave', () => {
+            target.classList.remove('drag-over');
+        });
+
+        target.addEventListener('drop', (e) => {
+            e.preventDefault();
+            target.classList.remove('drag-over');
+            const data = e.dataTransfer.getData('text/plain');
+            addLog(`Dropped ${data} successfully!`);
+            
+            const newItem = document.createElement('div');
+            newItem.textContent = `${data} (dropped)`;
+            newItem.style.background = '#28a745';
+            newItem.style.color = 'white';
+            newItem.style.padding = '5px';
+            newItem.style.margin = '2px';
+            newItem.style.borderRadius = '3px';
+            target.appendChild(newItem);
+        });
+
+        addLog('DnD test initialized');
+    </script>
+</body>
+</html>

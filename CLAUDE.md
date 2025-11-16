@@ -637,3 +637,4 @@ According to `Project Plan - Updated.md`:
 **Status:** All phases complete! The Portal Management System is production-ready.
 
 **Next Steps:** Deploy to production using the guides in `DEPLOYMENT.md`, or continue with optional enhancements (Puck editor integration, email notifications, audit logging).
+- store all research in C:\Cloud Project\Research

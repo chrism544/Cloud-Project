@@ -1,0 +1,55 @@
+// Page Builder Models - Add to end of schema.prisma
+
+model PageBuilder {
+  id          String   @id @default(uuid()) @db.Uuid
+  portalId    String   @db.Uuid
+  slug        String   @db.VarChar(200)
+  name        String   @db.VarChar(255)
+  pageData    Json?
+  pageHtml    String?  @db.Text
+  pageCss     String?  @db.Text
+  published   Boolean  @default(false)
+  createdBy   String?  @db.Uuid
+  updatedBy   String?  @db.Uuid
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  
+  portal      Portal   @relation("PageBuilderPortal", fields: [portalId], references: [id], onDelete: Cascade)
+  creator     User?    @relation("PageBuilderCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  updater     User?    @relation("PageBuilderUpdater", fields: [updatedBy], references: [id], onDelete: SetNull)
+  
+  @@unique([portalId, slug])
+  @@index([portalId])
+  @@index([published])
+  @@index([createdBy])
+}
+
+model BuilderAsset {
+  id          String   @id @default(uuid()) @db.Uuid
+  portalId    String   @db.Uuid
+  filename    String   @db.VarChar(255)
+  originalName String  @db.VarChar(255)
+  mimeType    String   @db.VarChar(100)
+  size        BigInt
+  url         String   @db.VarChar(1024)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  
+  portal      Portal   @relation("BuilderAssetPortal", fields: [portalId], references: [id], onDelete: Cascade)
+  
+  @@index([portalId])
+  @@index([mimeType])
+}
+
+model BuilderTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  pageData    Json
+  pageHtml    String?  @db.Text
+  pageCss     String?  @db.Text
+  tags        String[]
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  
+  @@index([featured])
+}

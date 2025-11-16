@@ -14,6 +14,7 @@ import {
   useReorderMenuItems,
 } from "@/lib/hooks/useMenus";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
+import { navigation as adminNavigation } from "@/components/layouts/DashboardLayout";
 import { Plus, Trash2, GripVertical, Link as LinkIcon, FileText, ChevronDown } from "lucide-react";
 import {
   DndContext,
@@ -119,6 +120,9 @@ export default function MenusPage() {
   const [isCreatingItem, setIsCreatingItem] = useState(false);
   const [menuName, setMenuName] = useState("");
   const [itemForm, setItemForm] = useState({ label: "", url: "", pageId: "" });
+  const [isImportingSidebar, setIsImportingSidebar] = useState(false);
+  const [populateWithSidebar, setPopulateWithSidebar] = useState(true);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const { data: selectedMenu } = useMenu(selectedMenuId || "");
   const [localItems, setLocalItems] = useState<MenuItem[]>([]);
@@ -133,21 +137,58 @@ export default function MenusPage() {
   // Update local items when menu data changes
   useEffect(() => { // Changed from useState to useEffect
     if (selectedMenu?.items) {
-      setLocalItems(selectedMenu.items.sort((a, b) => a.order - b.order));
+      const items = [...selectedMenu.items]
+        .sort((a: any, b: any) => (a.displayOrder ?? a.order ?? 0) - (b.displayOrder ?? b.order ?? 0))
+        .map((it: any) => ({
+          id: it.id,
+          label: it.label ?? it.title ?? "",
+          url: it.url ?? it.linkUrl ?? null,
+          pageId: it.pageId ?? null,
+          parentId: it.parentId ?? null,
+          order: it.order ?? it.displayOrder ?? 0,
+        }));
+      setLocalItems(items);
     } else {
       setLocalItems([]); // Clear items if no menu selected or no items
     }
   }, [selectedMenu]); // Depend on selectedMenu
 
+  const slugify = (s: string) =>
+    s
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+
   const handleCreateMenu = async () => {
-    if (!selectedPortalId || !menuName) return; // Use selectedPortalId
+    if (!selectedPortalId || !menuName) return; // Require portal and name
     try {
-      const newMenu = await createMenu.mutateAsync({ portalId: selectedPortalId, name: menuName }); // Use selectedPortalId
+      setCreateError(null);
+      const newMenu = await createMenu.mutateAsync({
+        portalId: selectedPortalId,
+        name: menuName,
+        location: slugify(menuName) || `menu-${Date.now()}`,
+      });
       setIsCreatingMenu(false);
       setMenuName("");
       setSelectedMenuId(newMenu.id);
-    } catch (error) {
+
+      // Optional: immediately populate with sidebar items
+      if (populateWithSidebar) {
+        let order = 0;
+        for (const nav of adminNavigation) {
+          await createMenuItem.mutateAsync({
+            menuId: newMenu.id,
+            label: nav.name,
+            url: nav.href,
+            order: order++,
+          });
+        }
+      }
+    } catch (error: any) {
       console.error("Failed to create menu:", error);
+      const msg = error?.response?.data?.error?.message || error?.message || "Failed to create menu";
+      setCreateError(msg);
     }
   };
 
@@ -180,7 +221,8 @@ export default function MenusPage() {
 
   const handleDeleteItem = async (id: string) => {
     try {
-      await deleteMenuItem.mutateAsync(id);
+      if (!selectedMenuId) return;
+      await deleteMenuItem.mutateAsync({ menuId: selectedMenuId, id });
     } catch (error) {
       console.error("Failed to delete menu item:", error);
     }
@@ -220,12 +262,15 @@ export default function MenusPage() {
             {/* Portal Selector Dropdown */}
             <div className="relative">
               <select
-                value={selectedPortalId || ""}
-                onChange={(e) => setSelectedPortalId(e.target.value || undefined)}
+                value={selectedPortalId ?? "__all__"}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSelectedPortalId(v === "__all__" ? undefined : v);
+                }}
                 className="w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 disabled={isLoadingPortals}
               >
-                <option value="" disabled>Select a Portal</option>
+                <option value="__all__">All Portals</option>
                 {portals?.map((p) => (
                   <option key={p.id} value={p.id}>{p.name} ({p.subdomain})</option>
                 ))}
@@ -240,6 +285,61 @@ export default function MenusPage() {
               <Plus className="w-5 h-5 mr-2" />
               New Menu
             </button>
+
+            <button
+              onClick={async () => {
+                if (!selectedPortalId) return;
+                try {
+                  setIsImportingSidebar(true);
+                  const menuName = "Sidebar Navigation";
+                  const existing = (menus || []).find((m: any) => (m.name || "").toLowerCase() === menuName.toLowerCase());
+                  const targetMenuId = existing?.id || (await createMenu.mutateAsync({
+                    portalId: selectedPortalId,
+                    name: menuName,
+                    location: slugify(menuName),
+                  })).id;
+                  setSelectedMenuId(targetMenuId);
+                  let order = 0;
+                  for (const nav of adminNavigation) {
+                    await createMenuItem.mutateAsync({
+                      menuId: targetMenuId,
+                      label: nav.name,
+                      url: nav.href,
+                      order: order++,
+                    });
+                  }
+                } finally {
+                  setIsImportingSidebar(false);
+                }
+              }}
+              disabled={!selectedPortalId || isImportingSidebar}
+              className="flex items-center px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+              title="Create a menu and import the sidebar items"
+            >
+              Import Sidebar
+            </button>
+
+            <button
+              onClick={async () => {
+                if (!selectedPortalId) return;
+                const names = ["User portal", "Admin portal", "Test portal"];                
+                // Avoid duplicates by name in current list
+                const existingNames = new Set((menus || []).map((m: any) => m.name.toLowerCase()));
+                for (const name of names) {
+                  if (existingNames.has(name.toLowerCase())) continue;
+                  await createMenu.mutateAsync({
+                    portalId: selectedPortalId,
+                    name,
+                    location: slugify(name),
+                  });
+                }
+              }}
+              disabled={!selectedPortalId || createMenu.isPending}
+              className="flex items-center px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+              title="Add default menus (User/Admin/Test) to this portal"
+            >
+              Bulk add
+            </button>
           </div>
         </div>
 
@@ -253,27 +353,41 @@ export default function MenusPage() {
                   type="text"
                   value={menuName}
                   onChange={(e) => setMenuName(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="e.g., Main Navigation"
                 />
               </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleCreateMenu}
-                  disabled={createMenu.isPending || !selectedPortalId}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-                >
-                  {createMenu.isPending ? "Creating..." : "Create"}
-                </button>
-                <button
-                  onClick={() => {
-                    setIsCreatingMenu(false);
-                    setMenuName("");
-                  }}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
+              {createError && (
+                <div className="text-red-600 text-sm mb-2">{createError}</div>
+              )}
+              <div className="flex items-center justify-between gap-3">
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300"
+                    checked={populateWithSidebar}
+                    onChange={(e) => setPopulateWithSidebar(e.target.checked)}
+                  />
+                  Populate with sidebar items
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleCreateMenu}
+                    disabled={createMenu.isPending || !selectedPortalId}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    {createMenu.isPending ? "Creating..." : "Create"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsCreatingMenu(false);
+                      setMenuName("");
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -287,8 +401,6 @@ export default function MenusPage() {
               </div>
               {isLoading || isLoadingPortals ? ( // Add isLoadingPortals here
                 <div className="p-4 text-center text-gray-600">Loading...</div>
-              ) : !selectedPortalId ? (
-                <div className="p-4 text-center text-gray-600">Please select a portal to view menus.</div>
               ) : menus && menus.length > 0 ? (
                 <div className="divide-y divide-gray-200">
                   {menus.map((menu) => (
@@ -300,7 +412,14 @@ export default function MenusPage() {
                       onClick={() => setSelectedMenuId(menu.id)}
                     >
                       <div>
-                        <div className="font-medium text-gray-900">{menu.name}</div>
+                        <div className="font-medium text-gray-900 flex items-center gap-2">
+                          {menu.name}
+                          {!selectedPortalId && (
+                            <span className="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200">
+                              {(portals || []).find((p) => p.id === menu.portalId)?.name || menu.portalId}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-sm text-gray-600">{menu.items?.length || 0} items</div>
                       </div>
                       <button
@@ -316,7 +435,7 @@ export default function MenusPage() {
                   ))}
                 </div>
               ) : (
-                <div className="p-4 text-center text-gray-600">No menus yet for this portal.</div>
+                <div className="p-4 text-center text-gray-600">No menus found.</div>
               )}
             </div>
           </div>
@@ -326,13 +445,35 @@ export default function MenusPage() {
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-gray-900">{selectedMenu.name}</h2>
-                  <button
-                    onClick={() => setIsCreatingItem(true)}
-                    className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Item
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        if (!selectedMenuId) return;
+                        const existing = new Set(localItems.map((i) => i.label.toLowerCase()));
+                        let order = localItems.length;
+                        for (const nav of adminNavigation) {
+                          const label = nav.name;
+                          if (existing.has(label.toLowerCase())) continue;
+                          await createMenuItem.mutateAsync({
+                            menuId: selectedMenuId,
+                            label,
+                            url: nav.href,
+                            order: order++,
+                          });
+                        }
+                      }}
+                      className="flex items-center px-3 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 text-sm"
+                    >
+                      Import Sidebar
+                    </button>
+                    <button
+                      onClick={() => setIsCreatingItem(true)}
+                      className="flex items-center px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Item
+                    </button>
+                  </div>
                 </div>
 
                 {isCreatingItem && (
@@ -345,7 +486,7 @@ export default function MenusPage() {
                           type="text"
                           value={itemForm.label}
                           onChange={(e) => setItemForm({ ...itemForm, label: e.target.value })}
-                          className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full rounded border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           placeholder="Menu item label"
                         />
                       </div>
@@ -355,7 +496,7 @@ export default function MenusPage() {
                           type="text"
                           value={itemForm.url}
                           onChange={(e) => setItemForm({ ...itemForm, url: e.target.value })}
-                          className="w-full rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full rounded border border-gray-300 px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           placeholder="/path or https://..."
                         />
                       </div>
@@ -399,6 +540,39 @@ export default function MenusPage() {
               <div className="bg-white rounded-lg shadow p-12 text-center">
                 <h3 className="text-lg font-medium text-gray-900">No menu selected</h3>
                 <p className="mt-2 text-gray-600">Select a menu from the list to manage its items.</p>
+                {selectedPortalId && (
+                  <div className="mt-6">
+                    <button
+                      onClick={async () => {
+                        try {
+                          setIsImportingSidebar(true);
+                          const menuName = "Sidebar Navigation";
+                          const existing = (menus || []).find((m: any) => (m.name || "").toLowerCase() === menuName.toLowerCase());
+                          const targetMenuId = existing?.id || (await createMenu.mutateAsync({
+                            portalId: selectedPortalId!,
+                            name: menuName,
+                            location: slugify(menuName),
+                          })).id;
+                          setSelectedMenuId(targetMenuId);
+                          let order = 0;
+                          for (const nav of adminNavigation) {
+                            await createMenuItem.mutateAsync({
+                              menuId: targetMenuId,
+                              label: nav.name,
+                              url: nav.href,
+                              order: order++,
+                            });
+                          }
+                        } finally {
+                          setIsImportingSidebar(false);
+                        }
+                      }}
+                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 text-sm"
+                    >
+                      Quick import sidebar
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

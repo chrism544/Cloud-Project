@@ -5,7 +5,7 @@ import { Home, FileText, Menu, Palette, Upload, LogOut, Settings, Package, Layou
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const navigation = [
+export const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Pages", href: "/dashboard/pages", icon: FileText },
   { name: "Page Builder", href: "/dashboard/builder", icon: Layout },

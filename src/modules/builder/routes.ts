@@ -1,4 +1,11 @@
 import { FastifyPluginAsync } from 'fastify';
+import { z } from 'zod';
+
+const createPageSchema = z.object({
+  portalId: z.string().uuid(),
+  name: z.string().min(1),
+  slug: z.string().min(1),
+});
 
 const builderRoutes: FastifyPluginAsync = async (fastify) => {
   // Get pages for portal
@@ -85,36 +92,49 @@ const builderRoutes: FastifyPluginAsync = async (fastify) => {
 
   // Create new page
   fastify.post('/pages', { preHandler: fastify.requireRole('editor') }, async (request, reply) => {
-    const { portalId, name, slug } = request.body as any;
+    try {
+      const { portalId, name, slug } = createPageSchema.parse(request.body);
 
-    // Verify user has access to this portal
-    if (portalId !== request.user.portalId) {
-      return reply.code(403).send({ error: 'Access denied' });
-    }
-
-    // Check if slug already exists in this portal
-    const existing = await fastify.prisma.pageBuilder.findUnique({
-      where: { portalId_slug: { portalId, slug } }
-    });
-
-    if (existing) {
-      return reply.code(400).send({ error: 'A page with this slug already exists' });
-    }
-
-    const page = await fastify.prisma.pageBuilder.create({
-      data: {
-        portalId,
-        name,
-        slug,
-        pageData: {},
-        pageHtml: '',
-        pageCss: '',
-        createdBy: request.user.sub,
-        updatedBy: request.user.sub,
+      // Verify user has access to this portal
+      if (portalId !== request.user.portalId) {
+        return reply.code(403).send({ error: { code: 'FORBIDDEN', message: 'Access denied to this portal' } });
       }
-    });
 
-    return page;
+      // Check if slug already exists in this portal
+      const existing = await fastify.prisma.pageBuilder.findUnique({
+        where: { portalId_slug: { portalId, slug } }
+      });
+
+      if (existing) {
+        return reply.code(400).send({ error: { code: 'DUPLICATE_SLUG', message: 'A page with this slug already exists' } });
+      }
+
+      const page = await fastify.prisma.pageBuilder.create({
+        data: {
+          portalId,
+          name,
+          slug,
+          pageData: {},
+          pageHtml: '',
+          pageCss: '',
+          createdBy: request.user.sub,
+          updatedBy: request.user.sub,
+        }
+      });
+
+      return reply.code(201).send(page);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return reply.code(400).send({
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid request data',
+            details: error.errors
+          }
+        });
+      }
+      throw error;
+    }
   });
 
   // Publish/unpublish page

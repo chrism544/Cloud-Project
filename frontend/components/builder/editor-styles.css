@@ -1,0 +1,527 @@
+/**
+ * Custom Styles for Elementor-style Column System
+ * These styles enhance the visual experience in the GrapesJS editor
+ */
+
+/* ==================== Enable Pointer Events for Right-Click ==================== */
+/* This ensures context menu events can fire on all GrapesJS elements */
+#gjs * {
+  pointer-events: auto !important;
+}
+
+/* ==================== Section Styles ==================== */
+.flex-section-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  min-height: 100px;
+  padding: 20px;
+  gap: 10px;
+  position: relative;
+  background: #f9fafb;
+  border: 2px dashed #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.flex-section-container:hover {
+  border-color: #3b97e3;
+  background: #eff6ff;
+}
+
+.flex-section-container.gjs-selected {
+  outline: 2px solid #3b97e3 !important;
+  outline-offset: 2px;
+  background: #dbeafe;
+  border-color: #3b97e3;
+}
+
+/* Label for section when selected */
+.flex-section-container.gjs-selected::before {
+  content: 'Section';
+  position: absolute;
+  top: -22px;
+  left: 0;
+  background: #3b97e3;
+  color: white;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 3px 3px 0 0;
+  z-index: 10;
+}
+
+/* ==================== Column Styles ==================== */
+.flex-column {
+  flex: 1;
+  min-width: 50px;
+  min-height: 50px;
+  padding: 15px;
+  background: #ffffff;
+  border: 1px dashed #d1d5db;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.flex-column:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  border-style: solid;
+}
+
+.flex-column.gjs-selected {
+  background: rgba(59, 151, 227, 0.1);
+  border: 2px solid #3b97e3;
+}
+
+/* Label for column when selected */
+.flex-column.gjs-selected::before {
+  content: 'Column';
+  position: absolute;
+  top: -20px;
+  left: 0;
+  background: #3b97e3;
+  color: white;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 2px 2px 0 0;
+  z-index: 10;
+}
+
+/* ==================== Column Resizer Enhancement ==================== */
+.gjs-resizer-c {
+  background: transparent;
+  border: none;
+}
+
+/* Right edge resizer (for columns) */
+.gjs-resizer-c.gjs-resizer-c-cr {
+  cursor: col-resize !important;
+  background: rgba(59, 151, 227, 0.3);
+  width: 8px !important;
+  right: -4px !important;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.gjs-resizer-c.gjs-resizer-c-cr:hover {
+  background: rgba(59, 151, 227, 0.7);
+  width: 10px !important;
+}
+
+/* Hide other resize handles for columns */
+.flex-column .gjs-resizer-c:not(.gjs-resizer-c-cr) {
+  display: none !important;
+}
+
+/* ==================== Block Icons & Categories ==================== */
+.gjs-block-section svg,
+.gjs-block-widget svg {
+  color: #374151;
+}
+
+.gjs-block-category .gjs-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 11px;
+  padding: 10px 12px;
+  background: #f3f4f6;
+  color: #1f2937;
+  letter-spacing: 0.5px;
+}
+
+/* Different colors for different categories */
+.gjs-block-category[id*="Layout"] .gjs-title {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.gjs-block-category[id*="Widgets"] .gjs-title {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.gjs-block-category[id*="Sections"] .gjs-title {
+  background: #fce7f3;
+  color: #9f1239;
+}
+
+/* ==================== Block Hover Effects ==================== */
+.gjs-block {
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.gjs-block:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* ==================== Drag & Drop Visual Feedback ==================== */
+.gjs-dashed {
+  border: 2px dashed #3b97e3 !important;
+  background: rgba(59, 151, 227, 0.1) !important;
+}
+
+.gjs-bdrag {
+  border: 2px solid #10b981 !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* ==================== Traits Panel Enhancement ==================== */
+.gjs-trt-trait__wrp button[type="button"] {
+  width: 100%;
+  padding: 8px 12px;
+  margin: 4px 0;
+  background: #3b97e3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gjs-trt-trait__wrp button[type="button"]:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.gjs-trt-trait__wrp button[type="button"]:active {
+  transform: translateY(0);
+}
+
+/* ==================== Empty State for Columns ==================== */
+.flex-column:empty::after {
+  content: 'Drop widgets here';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 80px;
+  color: #9ca3af;
+  font-size: 13px;
+  font-style: italic;
+  pointer-events: none;
+}
+
+.flex-column:not(:empty)::after {
+  display: none;
+}
+
+/* ==================== Responsive Indicators ==================== */
+@media (max-width: 768px) {
+  .flex-section-container {
+    flex-direction: column !important;
+  }
+
+  .flex-column {
+    width: 100% !important;
+    flex: none !important;
+  }
+}
+
+/* ==================== Elementor-Style Trait Tabs ==================== */
+.elementor-trait-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 2px solid #e5e7eb;
+  margin: 0 -10px 15px -10px;
+  padding: 0 10px;
+}
+
+.elementor-tab-buttons {
+  display: flex;
+  gap: 0;
+  justify-content: stretch;
+}
+
+.elementor-tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+}
+
+.elementor-tab-btn svg {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.elementor-tab-btn:hover {
+  color: #3b82f6;
+  background: #f9fafb;
+}
+
+.elementor-tab-btn:hover svg {
+  opacity: 1;
+}
+
+.elementor-tab-btn.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.elementor-tab-btn.active svg {
+  opacity: 1;
+}
+
+.elementor-tab-btn:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+/* ==================== Trait Empty State ==================== */
+.trait-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.trait-empty-icon {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.trait-empty-icon svg {
+  color: #d1d5db;
+}
+
+.trait-empty-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0 0 8px 0;
+}
+
+.trait-empty-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+  font-style: italic;
+}
+
+/* ==================== Collapsible Trait Sections ==================== */
+.trait-section {
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 10px;
+}
+
+.trait-section:last-child {
+  border-bottom: none;
+}
+
+.trait-section-header {
+  padding: 10px 12px;
+  background: #f9fafb;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  color: #374151;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.trait-section-header:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.trait-section-header:active {
+  background: #e5e7eb;
+}
+
+.trait-section-header .arrow {
+  transition: transform 0.3s ease;
+  font-size: 10px;
+  color: #9ca3af;
+}
+
+.trait-section.collapsed .arrow {
+  transform: rotate(-90deg);
+}
+
+.trait-section-content {
+  padding: 12px;
+  max-height: 2000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+
+.trait-section.collapsed .trait-section-content {
+  max-height: 0;
+  padding: 0 12px;
+}
+
+/* Smooth animation for section toggle */
+.trait-section-content > * {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.trait-section.collapsed .trait-section-content > * {
+  opacity: 0;
+}
+
+/* ==================== Enhanced Trait Inputs ==================== */
+.gjs-trt-trait {
+  margin-bottom: 12px;
+}
+
+.gjs-trt-trait .gjs-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.gjs-trt-trait input[type="text"],
+.gjs-trt-trait input[type="number"],
+.gjs-trt-trait select,
+.gjs-trt-trait textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #1f2937;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.gjs-trt-trait input[type="text"]:focus,
+.gjs-trt-trait input[type="number"]:focus,
+.gjs-trt-trait select:focus,
+.gjs-trt-trait textarea:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.gjs-trt-trait input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+/* Color picker enhancement */
+.gjs-trt-trait input[type="color"] {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.gjs-trt-trait input[type="color"]:hover {
+  border-color: #9ca3af;
+}
+
+/* Range slider enhancement */
+.gjs-trt-trait input[type="range"] {
+  width: 100%;
+  height: 6px;
+  accent-color: #3b82f6;
+}
+
+/* ==================== Trait Groups Styling ==================== */
+.trait-group {
+  margin-bottom: 20px;
+}
+
+.trait-group-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2937;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* ==================== Responsive Trait Panel ==================== */
+@media (max-width: 1024px) {
+  .elementor-tab-btn {
+    font-size: 10px;
+    padding: 10px 6px;
+  }
+
+  .elementor-tab-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* ==================== Dark Mode Support (Future) ==================== */
+@media (prefers-color-scheme: dark) {
+  .elementor-trait-tabs {
+    background: #1f2937;
+    border-bottom-color: #374151;
+  }
+
+  .elementor-tab-btn {
+    color: #9ca3af;
+  }
+
+  .elementor-tab-btn:hover {
+    color: #60a5fa;
+    background: #374151;
+  }
+
+  .elementor-tab-btn.active {
+    color: #60a5fa;
+    background: #1e3a5f;
+    border-bottom-color: #60a5fa;
+  }
+
+  .trait-section-header {
+    background: #374151;
+    color: #e5e7eb;
+  }
+
+  .trait-section-header:hover {
+    background: #4b5563;
+  }
+
+  .gjs-trt-trait input,
+  .gjs-trt-trait select,
+  .gjs-trt-trait textarea {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+}

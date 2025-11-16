@@ -54,4 +54,31 @@ export default async function portalRoutes(app: FastifyInstance) {
     });
     reply.send(menus);
   });
+
+  // Get active theme for a portal
+  app.get(`${prefix}/:portalId/theme`, async (req, reply) => {
+    const { portalId } = req.params as { portalId: string };
+
+    const activeTheme = await app.prisma.theme.findFirst({
+      where: { portalId, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        tokens: true,
+        isActive: true,
+      },
+    });
+
+    if (!activeTheme) {
+      // Return default theme if no active theme found
+      return reply.send({
+        id: null,
+        name: 'Default',
+        tokens: {},
+        isActive: true,
+      });
+    }
+
+    reply.send(activeTheme);
+  });
 }

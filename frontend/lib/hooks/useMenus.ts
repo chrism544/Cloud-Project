@@ -23,6 +23,7 @@ type Menu = {
 type CreateMenuInput = {
   portalId: string;
   name: string;
+  location: string; // required by backend
 };
 
 type UpdateMenuInput = Partial<CreateMenuInput>;
@@ -31,8 +32,8 @@ type CreateMenuItemInput = {
   menuId: string;
   label: string;
   url?: string;
-  pageId?: string;
-  parentId?: string;
+  pageId?: string; // ignored by backend for now
+  parentId?: string | null;
   order?: number;
 };
 
@@ -42,7 +43,7 @@ export function useMenus(portalId?: string) {
   return useQuery({
     queryKey: ["menus", portalId],
     queryFn: async () => {
-      const url = portalId ? `/api/v1/menus?portalId=${portalId}` : "/api/v1/menus";
+      const url = portalId ? `/api/v1/menus?portal_id=${portalId}` : "/api/v1/menus";
       const { data } = await api.get<Menu[]>(url);
       return data;
     },
@@ -103,8 +104,14 @@ export function useCreateMenuItem() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: CreateMenuItemInput) => {
-      const { data } = await api.post<MenuItem>("/api/v1/menu-items", input);
-      return data;
+      const body = {
+        title: input.label,
+        linkUrl: input.url || "#",
+        parentId: input.parentId ?? null,
+        displayOrder: input.order ?? 0,
+      };
+      const { data } = await api.post<MenuItem>(`/api/v1/menus/${input.menuId}/items`, body);
+      return data as any;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["menus"] });
@@ -131,11 +138,14 @@ export function useUpdateMenuItem(id: string) {
 export function useDeleteMenuItem() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/api/v1/menu-items/${id}`);
+    mutationFn: async ({ menuId, id }: { menuId: string; id: string }) => {
+      await api.delete(`/api/v1/menus/${menuId}/items/${id}`);
     },
-    onSuccess: () => {
+    onSuccess: (_ , variables) => {
       queryClient.invalidateQueries({ queryKey: ["menus"] });
+      if (variables?.menuId) {
+        queryClient.invalidateQueries({ queryKey: ["menus", variables.menuId] });
+      }
     },
   });
 }
