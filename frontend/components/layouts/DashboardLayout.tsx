@@ -1,7 +1,7 @@
 "use client";
 import { ReactNode } from "react";
 import { useAuthStore } from "@/lib/stores/auth";
-import { Home, FileText, Menu, Palette, Upload, LogOut, Settings, Package, Layout } from "lucide-react";
+import { Home, FileText, Menu, Palette, Upload, LogOut, Settings, Package, Layout, Shield } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,6 +14,7 @@ export const navigation = [
   { name: "Assets", href: "/dashboard/assets", icon: Upload },
   { name: "Global Content", href: "/dashboard/global-content", icon: Package },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  { name: "Entra Admin", href: "/entra-admin", icon: Shield },
 ];
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
